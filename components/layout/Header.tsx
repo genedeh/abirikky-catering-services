@@ -13,10 +13,20 @@ const navigationItems = [
 
 export function Header() {
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [isMenuActive, setIsMenuActive] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setHasScrolled(window.scrollY > 12);
+      const menuSection = document.getElementById("menu");
+
+      if (!menuSection) {
+        setIsMenuActive(false);
+        return;
+      }
+
+      const menuBounds = menuSection.getBoundingClientRect();
+      setIsMenuActive(menuBounds.top <= 80 && menuBounds.bottom >= 80);
     };
 
     handleScroll();
@@ -30,13 +40,23 @@ export function Header() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-top transition-colors duration-300 ${
-        hasScrolled
+        isMenuActive
+          ? "border-b border-white/15 bg-gold-500/30 shadow-sm backdrop-blur-md"
+          : hasScrolled
           ? "border-b border-white/10 bg-charcoal-900/35 shadow-sm backdrop-blur-md"
           : "bg-transparent"
       }`}
     >
       <div className="relative -left-[30px] mx-auto flex h-nav-h w-full max-w-container items-center justify-between px-container-x">
-        <Link href="/" aria-label="Abirikky home" className="shrink-0">
+        <Link
+          href="/"
+          aria-label="Abirikky home"
+          className={`shrink-0 transition-colors duration-300 ${
+            isMenuActive
+              ? "rounded-lg bg-charcoal-900 px-3 py-2 shadow-sm"
+              : ""
+          }`}
+        >
           <Image
             src="/logoFull.png"
             alt="Abirikky"
@@ -58,7 +78,9 @@ export function Header() {
               aria-current={item.isActive ? "page" : undefined}
               className={
                 item.isActive
-                  ? "font-bold text-gold-500 transition-colors duration-200"
+                  ? `font-bold transition-colors duration-200 ${
+                      isMenuActive ? "text-charcoal-700" : "text-gold-500"
+                    }`
                   : "text-white/85 transition-colors duration-200 hover:text-gold-500"
               }
             >
