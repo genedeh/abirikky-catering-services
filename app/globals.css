@@ -31,3 +31,21 @@ body {
     100% 100%,
     100% 100%;
 }
+
+@keyframes galleryMarqueeDown {
+  0% {
+    transform: translateY(-55%);
+  }
+  100% {
+    transform: translateY(35%);
+  }
+}
+
+@keyframes galleryMarqueeUp {
+  0% {
+    transform: translateY(35%);
+  }
+  100% {
+    transform: translateY(-55%);
+  }
+}

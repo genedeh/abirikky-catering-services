@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display, Supermercado_One } from "next/font/google";
 
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 import "./globals.css";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className="font-body">
         <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );
