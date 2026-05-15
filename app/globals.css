@@ -2,8 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --hero-font-family: var(--font-hero), var(--font-display), Georgia, serif;
+}
+
 html,
 body {
+  min-height: 100%;
   width: 100%;
   overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+  color: #f6efe7;
+  background-color: #080706;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(214, 169, 91, 0.12), transparent 28%),
+    radial-gradient(circle at 85% 35%, rgba(61, 181, 58, 0.08), transparent 24%),
+    linear-gradient(180deg, #11100e 0%, #070605 100%);
+  background-attachment: fixed;
+  background-position:
+    center,
+    center,
+    center;
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%;
 }

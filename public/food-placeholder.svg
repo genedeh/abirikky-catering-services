@@ -1,0 +1,19 @@
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="480" rx="40" fill="#FFF8F0"/>
+  <ellipse cx="320" cy="250" rx="190" ry="110" fill="#FFFFFF" stroke="#EDE8E1" stroke-width="10"/>
+  <ellipse cx="320" cy="250" rx="140" ry="76" fill="#FDFBF2"/>
+  <circle cx="270" cy="220" r="28" fill="#3DB53A" opacity="0.9"/>
+  <circle cx="310" cy="205" r="22" fill="#4EC44E" opacity="0.9"/>
+  <circle cx="350" cy="220" r="26" fill="#72D672" opacity="0.85"/>
+  <circle cx="390" cy="240" r="18" fill="#3DB53A" opacity="0.9"/>
+  <circle cx="285" cy="265" r="24" fill="#D4B053" opacity="0.92"/>
+  <circle cx="335" cy="265" r="26" fill="#C8951C" opacity="0.95"/>
+  <circle cx="372" cy="275" r="20" fill="#D4B053" opacity="0.92"/>
+  <circle cx="250" cy="255" r="16" fill="#F0CF90"/>
+  <circle cx="410" cy="215" r="14" fill="#F0CF90"/>
+  <path d="M214 178C237 178 248 194 248 210C226 210 214 194 214 178Z" fill="#3DB53A"/>
+  <path d="M430 178C453 178 464 194 464 210C442 210 430 194 430 178Z" fill="#3DB53A"/>
+  <text x="320" y="414" text-anchor="middle" fill="#4A453E" font-family="Arial, sans-serif" font-size="28" font-weight="700">
+    Abirikky Dish
+  </text>
+</svg>
