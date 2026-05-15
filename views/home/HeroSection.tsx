@@ -44,7 +44,7 @@ const floatingAccents = [
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-screen overflow-hidden pt-nav-h">
+    <section className="relative z-sticky min-h-screen overflow-visible pt-nav-h">
       <div className="pointer-events-none absolute -left-8 top-24 hidden select-none font-display text-[7rem] font-bold leading-none text-white/[0.035] sm:block md:text-[10rem] lg:left-0 lg:text-[13rem] xl:text-[16rem]">
         ounje
       </div>
