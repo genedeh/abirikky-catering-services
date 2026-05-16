@@ -49,13 +49,14 @@ export function AboutSection() {
         <div className="relative min-h-[28rem] md:min-h-[34rem]">
           <div className="absolute left-4 top-1/2 h-[24rem] w-[16rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:left-10 sm:h-[29rem] sm:w-[19rem] lg:left-14 lg:h-[34rem] lg:w-[22rem]" />
 
-          <div className="pointer-events-none absolute left-[-1rem] top-1/2 z-raised h-[28rem] w-[28rem] -translate-y-1/2 sm:left-0 sm:h-[33rem] sm:w-[33rem] lg:left-1 lg:h-[40rem] lg:w-[40rem]">
+          <div className="pointer-events-none absolute left-[-2rem] top-1/2 z-raised h-[28rem] w-[36rem] -translate-y-1/2 sm:left-[-1rem] sm:h-[33rem] sm:w-[43rem] lg:left-[-2rem] lg:h-[40rem] lg:w-[52rem]">
             <Image
               src="/hero/heroImage3.png"
               alt="Prepared Nigerian dish"
               fill
-              sizes="(min-width: 1024px) 640px, (min-width: 640px) 528px, 448px"
+              sizes="(min-width: 1024px) 832px, (min-width: 640px) 688px, 576px"
               className="object-contain drop-shadow-2xl"
+              loading="eager"
             />
           </div>
         </div>

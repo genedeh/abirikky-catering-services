@@ -5,12 +5,12 @@ const floatingPlates = [
   {
     src: "/hero/heroImage1.png",
     className:
-      "-left-28 top-[-5rem] h-[22.5rem] w-[22.5rem] lg:-left-40 lg:top-[-7rem] lg:h-[30rem] lg:w-[30rem] xl:top-[-9rem] xl:h-[37.5rem] xl:w-[37.5rem]",
+      "-left-36 top-[-7rem] h-[26rem] w-[34rem] lg:-left-52 lg:top-[-9rem] lg:h-[34rem] lg:w-[45rem] xl:top-[-12rem] xl:h-[43rem] xl:w-[56rem]",
   },
   {
     src: "/hero/heroImage2.png",
     className:
-      "bottom-[-6rem] right-[1%] h-[22rem] w-[22rem] lg:bottom-[-7rem] lg:right-[6%] lg:h-[32rem] lg:w-[32rem] xl:h-[41rem] xl:w-[41rem]",
+      "bottom-[-8rem] right-[-2%] h-[26rem] w-[34rem] lg:bottom-[-9rem] lg:right-[3%] lg:h-[36rem] lg:w-[48rem] xl:h-[46rem] xl:w-[60rem]",
   },
 ];
 
@@ -113,8 +113,9 @@ export function HeroSection() {
                   src={plate.src}
                   alt=""
                   fill
-                  sizes="(min-width: 1280px) 600px, (min-width: 1024px) 480px, 360px"
+                  sizes="(min-width: 1280px) 896px, (min-width: 1024px) 720px, 544px"
                   className="object-contain drop-shadow-2xl"
+                  loading="eager"
                 />
               </div>
             ))}

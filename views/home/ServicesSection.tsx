@@ -205,6 +205,7 @@ export function ServicesSection() {
               fill
               sizes="(min-width: 1024px) 688px, (min-width: 640px) 576px, 480px"
               className="object-contain drop-shadow-2xl"
+              loading="eager"
             />
           </div>
         </div>

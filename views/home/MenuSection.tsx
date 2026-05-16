@@ -231,7 +231,7 @@ function MenuCard({
               ? "(min-width: 640px) 336px, 288px"
               : "(min-width: 1024px) 240px, 216px"
           }
-          className="object-contain p-1"
+          className="scale-125 object-contain p-0"
         />
       </div>
 
