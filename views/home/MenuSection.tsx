@@ -98,7 +98,7 @@ export function MenuSection() {
               type="button"
               onClick={handlePrevious}
               aria-label="Previous menu item"
-              className="absolute left-0 top-1/2 z-dropdown hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 lg:flex"
+              className="absolute left-2 top-1/2 z-dropdown flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 lg:left-0 lg:h-14 lg:w-14"
             >
               <ChevronLeft aria-hidden="true" className="h-7 w-7" />
             </button>
@@ -134,7 +134,7 @@ export function MenuSection() {
               type="button"
               onClick={handleNext}
               aria-label="Next menu item"
-              className="absolute right-0 top-1/2 z-dropdown hidden h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 lg:flex"
+              className="absolute right-2 top-1/2 z-dropdown flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 lg:right-0 lg:h-14 lg:w-14"
             >
               <ChevronRight aria-hidden="true" className="h-7 w-7" />
             </button>
@@ -172,19 +172,24 @@ function MenuCard({
 }) {
   const slotX =
     position < 0
-      ? "calc(-50% - 18rem)"
+      ? "calc(-50% - min(34vw, 18rem))"
       : position > 0
-        ? "calc(-50% + 18rem)"
+        ? "calc(-50% + min(34vw, 18rem))"
         : "-50%";
   const exitX =
-    position < 0 ? "calc(-50% - 32rem)" : "calc(-50% + 32rem)";
+    position < 0
+      ? "calc(-50% - min(64vw, 32rem))"
+      : "calc(-50% + min(64vw, 32rem))";
 
   return (
     <motion.article
       initial={{
         opacity: 0,
         scale: 0.78,
-        x: position > 0 ? "calc(-50% + 32rem)" : "calc(-50% - 32rem)",
+        x:
+          position > 0
+            ? "calc(-50% + min(64vw, 32rem))"
+            : "calc(-50% - min(64vw, 32rem))",
       }}
       animate={{
         opacity: isActive ? 1 : 0.7,
@@ -198,8 +203,8 @@ function MenuCard({
       transition={{ type: "spring", stiffness: 220, damping: 30, mass: 0.95 }}
       className={`absolute left-1/2 top-0 rounded-xl ${
         isActive
-          ? "w-[18rem] bg-white p-7 text-charcoal-700 shadow-2xl sm:w-[21rem]"
-          : "hidden w-[13.5rem] cursor-pointer bg-white/20 p-5 text-white/80 shadow-lg sm:block lg:w-[15rem]"
+          ? "w-[14.5rem] bg-white p-5 text-charcoal-700 shadow-2xl sm:w-[21rem] sm:p-7"
+          : "w-[9rem] cursor-pointer bg-white/20 p-3 text-white/80 shadow-lg sm:w-[13.5rem] sm:p-5 lg:w-[15rem]"
       }`}
       onClick={onSelect}
       role={onSelect ? "button" : undefined}
@@ -218,8 +223,8 @@ function MenuCard({
       <div
         className={`relative mx-auto overflow-hidden rounded-lg ${
           isActive
-            ? "h-72 w-full bg-charcoal-100"
-            : "h-56 w-full bg-white/20"
+            ? "h-56 w-full bg-charcoal-100 sm:h-72"
+            : "h-36 w-full bg-white/20 sm:h-56"
         }`}
       >
         <Image
@@ -228,8 +233,8 @@ function MenuCard({
           fill
           sizes={
             isActive
-              ? "(min-width: 640px) 336px, 288px"
-              : "(min-width: 1024px) 240px, 216px"
+              ? "(min-width: 640px) 336px, 232px"
+              : "(min-width: 1024px) 240px, (min-width: 640px) 216px, 144px"
           }
           className="scale-125 object-contain p-0"
         />
@@ -238,7 +243,9 @@ function MenuCard({
       <div className="mt-6">
         <h3
           className={`text-center font-display font-bold leading-tight ${
-            isActive ? "text-3xl text-charcoal-700" : "text-2xl text-white"
+            isActive
+              ? "text-2xl text-charcoal-700 sm:text-3xl"
+              : "text-base text-white sm:text-2xl"
           }`}
         >
           {item.name}

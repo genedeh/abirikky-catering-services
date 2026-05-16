@@ -191,14 +191,14 @@ export function ServicesSection() {
           </div>
         </div>
 
-        <div className="relative min-h-[32rem] lg:h-full lg:min-h-0 lg:self-start">
+        <div className="relative min-h-[32rem] md:min-h-[34rem] lg:h-full lg:min-h-0 lg:self-start">
           <div className="pointer-events-none absolute -top-8 right-0 hidden select-none font-display text-[8rem] font-bold leading-none text-white/[0.035] md:block lg:text-[12rem] xl:text-[14rem]">
             fun mi
           </div>
 
-          <div className="absolute right-4 top-1/2 h-[28rem] w-[18rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:right-10 sm:h-[33rem] sm:w-[21rem] lg:right-8 lg:h-[38rem] lg:w-[24rem]" />
+          <div className="absolute right-4 top-1/2 h-[28rem] w-[18rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:right-10 sm:h-[33rem] sm:w-[21rem] md:bottom-8 md:right-auto md:left-1/2 md:top-auto md:h-[18rem] md:w-[34rem] md:-translate-x-1/2 md:translate-y-0 lg:right-8 lg:left-auto lg:top-1/2 lg:bottom-auto lg:h-[38rem] lg:w-[24rem] lg:-translate-x-0 lg:-translate-y-1/2" />
 
-          <div className="pointer-events-none absolute right-[calc(5.5rem-180px)] top-[58%] z-raised h-[30rem] w-[30rem] -translate-y-1/2 sm:right-[calc(7rem-180px)] sm:h-[36rem] sm:w-[36rem] lg:right-[calc(8.5rem-180px)] lg:h-[43rem] lg:w-[43rem]">
+          <div className="pointer-events-none absolute right-[calc(5.5rem-180px)] top-[58%] z-raised h-[30rem] w-[30rem] -translate-y-1/2 sm:right-[calc(7rem-180px)] sm:h-[36rem] sm:w-[36rem] md:bottom-0 md:right-0 md:top-auto md:h-[30rem] md:w-[40rem] md:translate-y-0 lg:right-[calc(8.5rem-180px)] lg:top-[58%] lg:bottom-auto lg:h-[43rem] lg:w-[43rem] lg:-translate-y-1/2">
             <Image
               src="/section/sectionImage2.png"
               alt="Catering service dish"

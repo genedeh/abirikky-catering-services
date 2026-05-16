@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const navigationItems = [
   { label: "Menu", href: "/#menu", isActive: true },
@@ -14,6 +16,12 @@ const navigationItems = [
 export function Header() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isMenuActive, setIsMenuActive] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,9 +45,90 @@ export function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = isDrawerOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen]);
+
+  const drawer = (
+    <div
+      aria-hidden={!isDrawerOpen}
+      className={`fixed inset-0 z-[10001] transition-opacity duration-300 ease-out-exp lg:hidden ${
+        isDrawerOpen
+          ? "pointer-events-auto opacity-100"
+          : "pointer-events-none opacity-0"
+      }`}
+    >
+      <button
+        type="button"
+        aria-label="Close navigation menu"
+        onClick={() => setIsDrawerOpen(false)}
+        className="absolute inset-0 bg-charcoal-900/55 backdrop-blur-md"
+      />
+
+      <aside
+        className={`absolute right-0 top-0 flex h-full w-[min(21rem,86vw)] flex-col bg-charcoal-900/95 px-6 py-6 shadow-2xl backdrop-blur-xl transition-transform duration-300 ease-out-exp ${
+          isDrawerOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <Image
+            src="/logoFull.png"
+            alt="Abirikky"
+            width={180}
+            height={64}
+            priority
+            className="h-auto w-32"
+          />
+
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            onClick={() => setIsDrawerOpen(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors duration-200 hover:bg-white/20"
+          >
+            <X aria-hidden="true" className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav
+          aria-label="Mobile navigation"
+          className="mt-12 flex flex-col gap-6 text-xl font-semibold"
+        >
+          {navigationItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={item.isActive ? "page" : undefined}
+              onClick={() => setIsDrawerOpen(false)}
+              className={
+                item.isActive
+                  ? "text-gold-500"
+                  : "text-white/85 transition-colors duration-200 hover:text-gold-500"
+              }
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          <Link
+            href="/#contact"
+            onClick={() => setIsDrawerOpen(false)}
+            className="mt-4 rounded-md border-2 border-green-500 px-5 py-3 text-center text-green-500 transition-colors duration-200 hover:border-gold-500 hover:text-gold-500"
+          >
+            Contact us
+          </Link>
+        </nav>
+      </aside>
+    </div>
+  );
+
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-top transition-colors duration-300 ${
+      className={`fixed inset-x-0 top-0 z-[10000] transition-colors duration-300 ${
         isMenuActive
           ? "border-b border-white/15 bg-gold-500/30 shadow-sm backdrop-blur-md"
           : hasScrolled
@@ -47,7 +136,7 @@ export function Header() {
           : "bg-transparent"
       }`}
     >
-      <div className="relative -left-[30px] mx-auto flex h-nav-h w-full max-w-container items-center justify-between px-container-x">
+      <div className="relative mx-auto flex h-nav-h w-full max-w-container items-center justify-between px-container-x lg:-left-[30px]">
         <Link
           href="/"
           aria-label="Abirikky home"
@@ -95,7 +184,18 @@ export function Header() {
             Contact us
           </Link>
         </nav>
+
+        <button
+          type="button"
+          aria-label="Open navigation menu"
+          onClick={() => setIsDrawerOpen(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 lg:hidden"
+        >
+          <Menu aria-hidden="true" className="h-6 w-6" />
+        </button>
       </div>
+
+      {isMounted ? createPortal(drawer, document.body) : null}
     </header>
   );
 }

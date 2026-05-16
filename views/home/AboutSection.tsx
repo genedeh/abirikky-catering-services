@@ -45,11 +45,11 @@ export function AboutSection() {
         </span>
       ))}
 
-      <div className="mx-auto grid w-full max-w-container items-center gap-14 px-container-x md:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-        <div className="relative min-h-[28rem] md:min-h-[34rem]">
-          <div className="absolute left-4 top-1/2 h-[24rem] w-[16rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:left-10 sm:h-[29rem] sm:w-[19rem] lg:left-14 lg:h-[34rem] lg:w-[22rem]" />
+      <div className="mx-auto grid w-full max-w-container items-center gap-14 px-container-x lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+        <div className="relative min-h-[28rem] md:min-h-[31rem] lg:min-h-[34rem]">
+          <div className="absolute left-4 top-1/2 h-[24rem] w-[16rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:left-10 sm:h-[29rem] sm:w-[19rem] md:left-1/2 md:top-[45%] md:h-[18rem] md:w-[34rem] md:-translate-x-1/2 lg:left-14 lg:top-1/2 lg:h-[34rem] lg:w-[22rem] lg:-translate-x-0" />
 
-          <div className="pointer-events-none absolute left-[-2rem] top-1/2 z-raised h-[28rem] w-[36rem] -translate-y-1/2 sm:left-[-1rem] sm:h-[33rem] sm:w-[43rem] lg:left-[-2rem] lg:h-[40rem] lg:w-[52rem]">
+          <div className="pointer-events-none absolute left-[-2rem] top-1/2 z-raised h-[28rem] w-[36rem] -translate-y-1/2 sm:left-[-1rem] sm:h-[33rem] sm:w-[43rem] md:left-auto md:right-0 md:top-[59%] md:h-[26rem] md:w-[40rem] lg:left-[-2rem] lg:right-auto lg:top-1/2 lg:h-[40rem] lg:w-[52rem]">
             <Image
               src="/hero/heroImage3.png"
               alt="Prepared Nigerian dish"
