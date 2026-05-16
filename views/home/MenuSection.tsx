@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, ShoppingBasket } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { MenuCardContent } from "@/components/menu/MenuCardContent";
+import { MenuDetailModal } from "@/views/menu/MenuDetailModal";
 import {
   menuBadges,
   menuItemsByCategory,
@@ -19,6 +20,7 @@ export function MenuSection() {
   const [activeIndex, setActiveIndex] = useState(() =>
     getMiddleIndex(menuItemsByCategory.All)
   );
+  const [selectedItem, setSelectedItem] = useState<MenuCardItem | null>(null);
 
   const activeItems = menuItemsByCategory[activeCategory];
 
@@ -47,6 +49,10 @@ export function MenuSection() {
 
   const handleNext = () => {
     setActiveIndex((index) => Math.min(index + 1, activeItems.length - 1));
+  };
+
+  const handleClosePreview = () => {
+    setSelectedItem(null);
   };
 
   return (
@@ -124,6 +130,7 @@ export function MenuSection() {
                         ? handleNext
                         : undefined
                   }
+                  onPreview={setSelectedItem}
                 />
               ))}
             </AnimatePresence>
@@ -147,14 +154,20 @@ export function MenuSection() {
         </div>
 
         <div className="mt-12 flex justify-center">
-          <button
-            type="button"
+          <a
+            href="/menu"
             className="rounded-full bg-white px-10 py-4 text-base font-bold text-gold-600 shadow-lg transition-colors duration-200 hover:bg-cream-100"
           >
             See More
-          </button>
+          </a>
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedItem ? (
+          <MenuDetailModal item={selectedItem} onClose={handleClosePreview} />
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }
@@ -164,11 +177,13 @@ function MenuCard({
   isActive,
   position,
   onSelect,
+  onPreview,
 }: {
   item: MenuCardItem;
   isActive: boolean;
   position: number;
   onSelect?: () => void;
+  onPreview: (item: MenuCardItem) => void;
 }) {
   const slotX =
     position < 0
@@ -206,70 +221,22 @@ function MenuCard({
           ? "w-[14.5rem] bg-white p-5 text-charcoal-700 shadow-2xl sm:w-[21rem] sm:p-7"
           : "w-[9rem] cursor-pointer bg-white/20 p-3 text-white/80 shadow-lg sm:w-[13.5rem] sm:p-5 lg:w-[15rem]"
       }`}
-      onClick={onSelect}
-      role={onSelect ? "button" : undefined}
-      tabIndex={onSelect ? 0 : undefined}
+      onClick={isActive ? () => onPreview(item) : onSelect}
+      role="button"
+      tabIndex={0}
       onKeyDown={(event) => {
-        if (!onSelect) {
-          return;
-        }
-
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          onSelect();
+          if (isActive) {
+            onPreview(item);
+            return;
+          }
+
+          onSelect?.();
         }
       }}
     >
-      <div
-        className={`relative mx-auto overflow-hidden rounded-lg ${
-          isActive
-            ? "h-56 w-full bg-charcoal-100 sm:h-72"
-            : "h-36 w-full bg-white/20 sm:h-56"
-        }`}
-      >
-        <Image
-          src={item.image}
-          alt={item.name}
-          fill
-          sizes={
-            isActive
-              ? "(min-width: 640px) 336px, 232px"
-              : "(min-width: 1024px) 240px, (min-width: 640px) 216px, 144px"
-          }
-          className="scale-125 object-contain p-0"
-        />
-      </div>
-
-      <div className="mt-6">
-        <h3
-          className={`text-center font-display font-bold leading-tight ${
-            isActive
-              ? "text-2xl text-charcoal-700 sm:text-3xl"
-              : "text-base text-white sm:text-2xl"
-          }`}
-        >
-          {item.name}
-        </h3>
-
-        <div
-          className={`mx-auto mt-4 flex w-full flex-col items-center justify-center gap-3 text-center text-sm font-semibold ${
-            isActive ? "text-charcoal-500" : "text-white/80"
-          }`}
-        >
-          <span>{item.itemsLeft} items left</span>
-          <button
-            type="button"
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-xs font-bold transition-colors duration-200 ${
-              isActive
-                ? "bg-green-500 text-white hover:bg-green-600"
-                : "bg-white/20 text-white hover:bg-white/30"
-            }`}
-          >
-            <ShoppingBasket aria-hidden="true" className="h-4 w-4" />
-            Add to basket
-          </button>
-        </div>
-      </div>
+      <MenuCardContent item={item} tone={isActive ? "light" : "muted"} />
     </motion.article>
   );
 }

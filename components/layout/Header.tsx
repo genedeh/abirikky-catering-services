@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 const navigationItems = [
-  { label: "Menu", href: "/#menu" },
+  { label: "Menu", href: "/menu" },
   { label: "Gallery", href: "/gallery" },
 ];
 
@@ -24,7 +24,11 @@ export function Header() {
       return pathname === "/gallery";
     }
 
-    return pathname === "/" && href === "/#menu";
+    if (href === "/menu") {
+      return pathname === "/menu";
+    }
+
+    return false;
   };
 
   useEffect(() => {
