@@ -63,7 +63,7 @@ export function GalleryCtaSection() {
         </p>
 
         <a
-          href="#gallery"
+          href="/gallery"
           className="group mt-10 inline-flex min-w-56 items-center justify-center rounded-full bg-white px-10 py-4 text-base font-bold text-gold-600 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-charcoal-900 hover:text-white hover:shadow-2xl"
         >
           <span className="transition-transform duration-300 group-hover:scale-105">

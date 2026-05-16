@@ -2,15 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 const navigationItems = [
-  { label: "Menu", href: "/#menu", isActive: true },
-  { label: "Foods", href: "/#foods" },
-  { label: "Services", href: "/#services" },
-  { label: "About us", href: "/#about" },
+  { label: "Menu", href: "/#menu" },
+  { label: "Gallery", href: "/gallery" },
 ];
 
 export function Header() {
@@ -18,6 +17,15 @@ export function Header() {
   const [isMenuActive, setIsMenuActive] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+
+  const isNavItemActive = (href: string) => {
+    if (href === "/gallery") {
+      return pathname === "/gallery";
+    }
+
+    return pathname === "/" && href === "/#menu";
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -102,10 +110,10 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              aria-current={item.isActive ? "page" : undefined}
+              aria-current={isNavItemActive(item.href) ? "page" : undefined}
               onClick={() => setIsDrawerOpen(false)}
               className={
-                item.isActive
+                isNavItemActive(item.href)
                   ? "text-gold-500"
                   : "text-white/85 transition-colors duration-200 hover:text-gold-500"
               }
@@ -164,9 +172,9 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              aria-current={item.isActive ? "page" : undefined}
+              aria-current={isNavItemActive(item.href) ? "page" : undefined}
               className={
-                item.isActive
+                isNavItemActive(item.href)
                   ? `font-bold transition-colors duration-200 ${
                       isMenuActive ? "text-charcoal-700" : "text-gold-500"
                     }`
