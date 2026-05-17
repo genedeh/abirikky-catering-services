@@ -1,3 +1,5 @@
+import { slugify } from "@/utils/slugify";
+
 export type MenuCategory =
   | "All"
   | "Rice"
@@ -163,3 +165,11 @@ export const menuItemsByCategory: Record<MenuCategory, MenuCardItem[]> = {
   Protein: menuItems.filter((item) => item.category === "Protein"),
   Others: menuItems.filter((item) => item.category === "Others"),
 };
+
+export const menuItemsBySlug: Record<string, MenuCardItem> = menuItems.reduce(
+  (itemsBySlug, item) => {
+    itemsBySlug[slugify(item.name)] = item;
+    return itemsBySlug;
+  },
+  {} as Record<string, MenuCardItem>,
+);

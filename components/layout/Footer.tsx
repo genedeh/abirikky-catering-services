@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import {
+  normalizeWhatsAppPhone,
+  WHATSAPP_ORDER_PHONE,
+} from "@/utils/whatsappOrder";
+
 const socialLinks: Array<{
   label: string;
   href: string;
@@ -13,7 +18,7 @@ const socialLinks: Array<{
   },
   {
     label: "WhatsApp",
-    href: "https://wa.me/c/166443001852085",
+    href: `https://wa.me/${normalizeWhatsAppPhone(WHATSAPP_ORDER_PHONE)}`,
     Icon: WhatsAppIcon,
   },
   {

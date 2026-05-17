@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 import { MenuCardContent } from "@/components/menu/MenuCardContent";
 import { MenuControlsBar } from "@/views/menu/MenuControlsBar";
 import { MenuDetailModal } from "@/views/menu/MenuDetailModal";
 import {
   menuItemsByCategory,
+  menuItemsBySlug,
   type MenuCardItem,
   type MenuCategory,
 } from "@/constants/menuData";
@@ -35,13 +37,20 @@ const floatingAccents = [
   },
 ];
 
-export function MenuPageView() {
+type MenuPageViewProps = {
+  initialSlug?: string;
+};
+
+export function MenuPageView({ initialSlug }: MenuPageViewProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const introRef = useRef<HTMLDivElement | null>(null);
   const [activeCategory, setActiveCategory] = useState<MenuCategory>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [pageIndex, setPageIndex] = useState(0);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuCardItem | null>(null);
+  const [invalidSlug, setInvalidSlug] = useState<string | null>(null);
   const [showFloatingControls, setShowFloatingControls] = useState(false);
 
   const filteredItems = useMemo(() => {
@@ -77,6 +86,30 @@ export function MenuPageView() {
       document.body.style.overflow = "";
     };
   }, [selectedItem]);
+
+  useEffect(() => {
+    const activeSlug =
+      pathname === "/menu"
+        ? null
+        : initialSlug ?? pathname.replace(/^\/menu\//, "").split("/")[0];
+
+    if (!activeSlug) {
+      setSelectedItem(null);
+      setInvalidSlug(null);
+      return;
+    }
+
+    const item = menuItemsBySlug[activeSlug];
+
+    if (!item) {
+      setSelectedItem(null);
+      setInvalidSlug(activeSlug);
+      return;
+    }
+
+    setSelectedItem(item);
+    setInvalidSlug(null);
+  }, [initialSlug, pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -119,10 +152,16 @@ export function MenuPageView() {
 
   const handleOpenPreview = (item: MenuCardItem) => {
     setSelectedItem(item);
+    setInvalidSlug(null);
   };
 
   const handleClosePreview = () => {
     setSelectedItem(null);
+    setInvalidSlug(null);
+
+    if (pathname !== "/menu") {
+      router.push("/menu");
+    }
   };
 
   return (
@@ -216,10 +255,17 @@ export function MenuPageView() {
                 className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
               >
                 {currentItems.map((item) => (
-                  <button
-                    type="button"
+                  <div
+                    role="button"
+                    tabIndex={0}
                     key={item.id}
                     onClick={() => handleOpenPreview(item)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleOpenPreview(item);
+                      }
+                    }}
                     className="rounded-xl border border-white/10 bg-white/[0.075] p-5 text-left shadow-2xl backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1 hover:border-gold-500/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500"
                   >
                     <MenuCardContent
@@ -227,7 +273,7 @@ export function MenuPageView() {
                       tone="dark"
                       highlightQuery={searchQuery}
                     />
-                  </button>
+                  </div>
                 ))}
               </motion.div>
             </AnimatePresence>
@@ -247,6 +293,18 @@ export function MenuPageView() {
             </p>
           </div>
         )}
+
+        {invalidSlug ? (
+          <div className="relative z-raised mx-auto mt-12 max-w-xl rounded-xl border border-gold-500/30 bg-gold-500/10 p-8 text-center">
+            <p className="font-display text-3xl font-bold text-white">
+              Menu item not found
+            </p>
+            <p className="mt-3 text-base font-medium leading-7 text-white/65">
+              We could not find a dish for “{invalidSlug}”. Browse the menu
+              below and choose another taste.
+            </p>
+          </div>
+        ) : null}
       </section>
 
       <AnimatePresence>

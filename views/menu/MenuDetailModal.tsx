@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ShoppingBasket, X, ZoomIn, ZoomOut } from "lucide-react";
-import { useState } from "react";
+import { X, ZoomIn, ZoomOut } from "lucide-react";
+import { useRef, useState } from "react";
 
+import { BasketQuantityControl } from "@/components/basket/BasketQuantityControl";
 import type { MenuCardItem, MenuCategory } from "@/constants/menuData";
+import { useBasket } from "@/hooks/useBasket";
 
 const categoryBadgeStyles: Record<Exclude<MenuCategory, "All">, string> = {
   Rice: "border-gold-500/40 bg-gold-500/18 text-gold-300",
@@ -23,6 +25,8 @@ type MenuDetailModalProps = {
 
 export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
   const [previewZoom, setPreviewZoom] = useState(1);
+  const { remainingCount } = useBasket(item);
+  const imageRef = useRef<HTMLDivElement | null>(null);
 
   const handleZoomIn = () => {
     setPreviewZoom((currentZoom) => Math.min(currentZoom + 0.25, 2.25));
@@ -34,7 +38,7 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[20000] flex items-stretch justify-center px-2.5 py-4 sm:py-6 lg:py-2.5"
+      className="fixed inset-x-0 bottom-0 top-nav-h z-[20000] flex items-stretch justify-center px-2.5 py-2.5"
       role="dialog"
       aria-modal="true"
       aria-label={`${item.name} details`}
@@ -50,7 +54,7 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
       />
 
       <motion.div
-        className="relative z-raised grid h-full max-h-[calc(100vh-2rem)] w-full max-w-none overflow-hidden rounded-2xl border border-white/10 shadow-2xl lg:max-h-[calc(100vh-1.25rem)] lg:grid-cols-[1fr_0.86fr]"
+        className="relative z-raised grid h-full max-h-[calc(100vh-5.75rem)] w-full max-w-none overflow-hidden rounded-2xl border border-white/10 shadow-2xl lg:grid-cols-[1fr_0.86fr]"
         initial={{ y: 32, scale: 0.96, opacity: 0 }}
         animate={{ y: 0, scale: 1, opacity: 1 }}
         exit={{ y: 22, scale: 0.96, opacity: 0 }}
@@ -58,6 +62,7 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
       >
         <div className="relative flex min-h-[20rem] items-center justify-center overflow-hidden bg-transparent p-6 sm:min-h-[28rem] lg:min-h-full">
           <motion.div
+            ref={imageRef}
             className={`relative aspect-square w-[min(92vw,34rem)] lg:w-[min(52vw,48rem)] ${
               previewZoom >= 1.7 ? "lg:cursor-zoom-out" : "lg:cursor-zoom-in"
             }`}
@@ -123,20 +128,20 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
           </span>
 
           <p className="mt-8 text-3xl font-black text-white">
-            {item.itemsLeft} items left
+            {remainingCount} items left
           </p>
           <p className="mt-3 max-w-md text-base font-medium leading-8 text-white/65">
             Add this dish to your basket for catering orders, event spreads, and
             fresh Abirikky-style service.
           </p>
 
-          <button
-            type="button"
-            className="mt-10 inline-flex h-btn-h-lg w-full items-center justify-center gap-3 rounded-md bg-green-500 px-6 text-base font-bold text-white shadow-green-sm transition-colors duration-200 hover:bg-green-600"
-          >
-            <ShoppingBasket aria-hidden="true" className="h-5 w-5" />
-            Add to basket
-          </button>
+          <div className="mt-10">
+            <BasketQuantityControl
+              flySourceRef={imageRef}
+              item={item}
+              buttonClassName="inline-flex h-btn-h-lg w-full items-center justify-center gap-3 rounded-md bg-green-500 px-6 text-base font-bold text-white shadow-green-sm transition-colors duration-200 hover:bg-green-600"
+            />
+          </div>
         </aside>
       </motion.div>
     </motion.div>

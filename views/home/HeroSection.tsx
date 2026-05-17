@@ -116,6 +116,9 @@ export function HeroSection() {
                   sizes="(min-width: 1280px) 896px, (min-width: 1024px) 720px, 544px"
                   className="object-contain drop-shadow-2xl"
                   loading="eager"
+                  fetchPriority={
+                    plate.src === "/hero/heroImage2.png" ? "high" : undefined
+                  }
                 />
               </div>
             ))}

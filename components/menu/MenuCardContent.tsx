@@ -1,7 +1,11 @@
-import Image from "next/image";
-import { ShoppingBasket } from "lucide-react";
+"use client";
 
+import Image from "next/image";
+import { useRef } from "react";
+
+import { BasketQuantityControl } from "@/components/basket/BasketQuantityControl";
 import type { MenuCardItem } from "@/constants/menuData";
+import { useBasket } from "@/hooks/useBasket";
 
 type MenuCardTone = "light" | "muted" | "dark";
 
@@ -76,10 +80,15 @@ export function MenuCardContent({
   highlightQuery,
 }: MenuCardContentProps) {
   const styles = toneStyles[tone];
+  const { remainingCount } = useBasket(item);
+  const imageRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <>
-      <div className={`relative mx-auto w-full overflow-hidden rounded-lg ${styles.image}`}>
+      <div
+        ref={imageRef}
+        className={`relative mx-auto w-full overflow-hidden rounded-lg ${styles.image}`}
+      >
         <Image
           src={item.image}
           alt={item.name}
@@ -99,15 +108,13 @@ export function MenuCardContent({
         <div
           className={`mx-auto mt-4 flex w-full flex-col items-center justify-center gap-3 text-center text-sm font-semibold ${styles.meta}`}
         >
-          <span>{item.itemsLeft} items left</span>
-          <button
-            type="button"
-            onClick={(event) => event.stopPropagation()}
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-xs font-bold transition-colors duration-200 ${styles.button}`}
-          >
-            <ShoppingBasket aria-hidden="true" className="h-4 w-4" />
-            Add to basket
-          </button>
+          <span>{remainingCount} items left</span>
+          <BasketQuantityControl
+            counterTone={tone === "light" ? "light" : "dark"}
+            flySourceRef={imageRef}
+            item={item}
+            buttonClassName={`inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-xs font-bold transition-colors duration-200 ${styles.button}`}
+          />
         </div>
       </div>
     </>

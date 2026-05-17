@@ -7,6 +7,9 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { HeaderBasketButton } from "@/components/basket/HeaderBasketButton";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+
 const navigationItems = [
   { label: "Menu", href: "/menu" },
   { label: "Gallery", href: "/gallery" },
@@ -16,6 +19,7 @@ export function Header() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isMenuActive, setIsMenuActive] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
 
@@ -25,7 +29,7 @@ export function Header() {
     }
 
     if (href === "/menu") {
-      return pathname === "/menu";
+      return pathname === "/menu" || pathname.startsWith("/menu/");
     }
 
     return false;
@@ -195,19 +199,40 @@ export function Header() {
           >
             Contact us
           </Link>
+
+          <HeaderBasketButton
+            badgeTone={isMenuActive ? "green" : "gold"}
+            onOpenCart={() => setIsCartDrawerOpen(true)}
+          />
         </nav>
 
-        <button
-          type="button"
-          aria-label="Open navigation menu"
-          onClick={() => setIsDrawerOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20 lg:hidden"
-        >
-          <Menu aria-hidden="true" className="h-6 w-6" />
-        </button>
+        <div className="flex items-center gap-3 lg:hidden">
+          <HeaderBasketButton
+            badgeTone={isMenuActive ? "green" : "gold"}
+            onOpenCart={() => setIsCartDrawerOpen(true)}
+          />
+
+          <button
+            type="button"
+            aria-label="Open navigation menu"
+            onClick={() => setIsDrawerOpen(true)}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20"
+          >
+            <Menu aria-hidden="true" className="h-6 w-6" />
+          </button>
+        </div>
       </div>
 
       {isMounted ? createPortal(drawer, document.body) : null}
+      {isMounted
+        ? createPortal(
+            <CartDrawer
+              isOpen={isCartDrawerOpen}
+              onClose={() => setIsCartDrawerOpen(false)}
+            />,
+            document.body,
+          )
+        : null}
     </header>
   );
 }
