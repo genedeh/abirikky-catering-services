@@ -84,3 +84,12 @@ body {
 .cart-drawer-scroll-visible::-webkit-scrollbar-thumb {
   background-color: rgba(61, 181, 58, 0.65);
 }
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

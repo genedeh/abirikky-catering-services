@@ -13,6 +13,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 const navigationItems = [
   { label: "Menu", href: "/menu" },
   { label: "Gallery", href: "/gallery" },
+  { label: "Blog", href: "/blog" },
 ];
 
 export function Header() {
@@ -30,6 +31,10 @@ export function Header() {
 
     if (href === "/menu") {
       return pathname === "/menu" || pathname.startsWith("/menu/");
+    }
+
+    if (href === "/blog") {
+      return pathname === "/blog" || pathname.startsWith("/blog/");
     }
 
     return false;
