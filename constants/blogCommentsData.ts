@@ -3,13 +3,17 @@ import { blogPosts } from "@/constants/blogData";
 export type BlogComment = {
   id: string;
   postSlug: string;
+  blogPostId?: string;
+  parentCommentId?: string | null;
   author: string;
   body: string;
   createdAtLabel: string;
   likes: number;
   dislikes: number;
   replies: BlogComment[];
+  status?: string;
   isUserComment?: boolean;
+  failed?: boolean;
 };
 
 const commentAuthors = [

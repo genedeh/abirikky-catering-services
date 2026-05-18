@@ -61,13 +61,15 @@ export function HeaderBasketButton({
 
   useEffect(() => {
     if (totalQuantity > 0) {
-      setIsBursting(false);
-      setRenderedQuantity(totalQuantity);
+      queueMicrotask(() => {
+        setIsBursting(false);
+        setRenderedQuantity(totalQuantity);
+      });
       return;
     }
 
     if (renderedQuantity > 0) {
-      setIsBursting(true);
+      queueMicrotask(() => setIsBursting(true));
       const timeoutId = window.setTimeout(() => {
         setRenderedQuantity(0);
         setIsBursting(false);

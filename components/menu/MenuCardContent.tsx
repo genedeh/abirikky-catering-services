@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useRef } from "react";
 
 import { BasketQuantityControl } from "@/components/basket/BasketQuantityControl";
+import { ResilientImage } from "@/components/ui/ResilientImage";
 import type { MenuCardItem } from "@/constants/menuData";
 
 type MenuCardTone = "light" | "muted" | "dark";
@@ -83,9 +83,9 @@ export function MenuCardContent({
         ref={imageRef}
         className={`relative mx-auto w-full overflow-hidden rounded-lg ${styles.image}`}
       >
-        <Image
+        <ResilientImage
           src={item.image}
-          alt={item.name}
+          alt={item.imageAlt ?? item.name}
           fill
           sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
           className="scale-125 object-contain p-0"

@@ -1,14 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { BasketQuantityControl } from "@/components/basket/BasketQuantityControl";
-import type { MenuCardItem, MenuCategory } from "@/constants/menuData";
+import { ResilientImage } from "@/components/ui/ResilientImage";
+import type { MenuCardItem } from "@/constants/menuData";
 
-const categoryBadgeStyles: Record<Exclude<MenuCategory, "All">, string> = {
+const categoryBadgeStyles: Record<string, string> = {
   Rice: "border-gold-500/40 bg-gold-500/18 text-gold-300",
   Swallow: "border-green-500/40 bg-green-500/18 text-green-300",
   Intercontinental: "border-cream-500/40 bg-cream-500/16 text-cream-300",
@@ -33,6 +33,9 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
   const handleZoomOut = () => {
     setPreviewZoom((currentZoom) => Math.max(currentZoom - 0.25, 0.85));
   };
+  const categoryBadgeStyle =
+    categoryBadgeStyles[item.category] ??
+    "border-white/20 bg-white/10 text-white/80";
 
   return (
     <motion.div
@@ -69,9 +72,9 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             onClick={previewZoom >= 1.7 ? handleZoomOut : handleZoomIn}
           >
-            <Image
+            <ResilientImage
               src={item.image}
-              alt={item.name}
+              alt={item.imageAlt ?? item.name}
               fill
               sizes="(min-width: 1024px) 832px, 92vw"
               className="scale-125 object-contain"
@@ -120,14 +123,14 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
           </h2>
 
           <span
-            className={`mt-6 inline-flex w-fit items-center rounded-full border px-4 py-2 text-sm font-bold ${categoryBadgeStyles[item.category]}`}
+            className={`mt-6 inline-flex w-fit items-center rounded-full border px-4 py-2 text-sm font-bold ${categoryBadgeStyle}`}
           >
             {item.category}
           </span>
 
           <p className="mt-8 max-w-md text-base font-medium leading-8 text-white/65">
-            Add this dish to your basket for catering orders, event spreads, and
-            fresh Abirikky-style service.
+            {item.description ||
+              "Add this dish to your basket for catering orders, event spreads, and fresh Abirikky-style service."}
           </p>
 
           <div className="mt-8">

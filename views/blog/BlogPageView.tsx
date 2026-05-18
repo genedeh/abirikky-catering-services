@@ -1,51 +1,72 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
+import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
+import { ResilientImage } from "@/components/ui/ResilientImage";
+import { blogCategories, type BlogCategory, type BlogPost } from "@/constants/blogData";
 import {
-  blogCategories,
-  blogPosts,
-  type BlogCategory,
-  type BlogPost,
-} from "@/constants/blogData";
+  useBlogCategoriesQuery,
+  useBlogPostsQuery,
+} from "@/hooks/useBlogQueries";
 
 const INITIAL_VISIBLE_COUNT = 9;
 const LOAD_MORE_COUNT = 6;
 
 export function BlogPageView() {
-  const [activeCategory, setActiveCategory] = useState<BlogCategory>("All");
+  const [activeCategory, setActiveCategory] = useState<BlogCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [page, setPage] = useState(1);
+  const [visiblePosts, setVisiblePosts] = useState<BlogPost[]>([]);
+  const blogQuery = useBlogPostsQuery({
+    page,
+    limit: page === 1 ? INITIAL_VISIBLE_COUNT : LOAD_MORE_COUNT,
+    category: activeCategory === "all" ? undefined : activeCategory,
+    search: searchQuery,
+    status: "published",
+  });
+  const categoriesQuery = useBlogCategoriesQuery();
+  const categories =
+    categoriesQuery.data ??
+    blogCategories.map((category) => ({
+      name: category,
+      slug: category === "All" ? "all" : category,
+    }));
+  const hasMorePosts = Boolean(blogQuery.data?.pagination.hasNextPage);
 
-  const filteredPosts = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+  useEffect(() => {
+    if (!blogQuery.data) {
+      return;
+    }
 
-    return blogPosts.filter((post) => {
-      const matchesCategory =
-        activeCategory === "All" || post.category === activeCategory;
-      const matchesSearch =
-        !query ||
-        post.title.toLowerCase().includes(query) ||
-        post.excerpt.toLowerCase().includes(query) ||
-        post.category.toLowerCase().includes(query);
+    queueMicrotask(() => {
+      setVisiblePosts((currentPosts) => {
+        if (page === 1) {
+          return blogQuery.data.items;
+        }
 
-      return matchesCategory && matchesSearch;
+        const existingIds = new Set(currentPosts.map((post) => post.id));
+        const nextPosts = blogQuery.data.items.filter(
+          (post) => !existingIds.has(post.id),
+        );
+
+        return [...currentPosts, ...nextPosts];
+      });
     });
-  }, [activeCategory, searchQuery]);
-
-  const visiblePosts = filteredPosts.slice(0, visibleCount);
-  const hasMorePosts = visibleCount < filteredPosts.length;
+  }, [blogQuery.data, page]);
 
   const handleCategoryChange = (category: BlogCategory) => {
     setActiveCategory(category);
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    setPage(1);
+    setVisiblePosts([]);
   };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    setPage(1);
+    setVisiblePosts([]);
   };
 
   return (
@@ -83,21 +104,21 @@ export function BlogPageView() {
               aria-label="Filter blog by category"
               className="scrollbar-none -mx-1 flex gap-3 overflow-x-auto px-1 pb-1"
             >
-              {blogCategories.map((category) => {
-                const isActive = category === activeCategory;
+              {categories.map((category) => {
+                const isActive = category.slug === activeCategory;
 
                 return (
                   <button
-                    key={category}
+                    key={category.slug}
                     type="button"
-                    onClick={() => handleCategoryChange(category)}
+                    onClick={() => handleCategoryChange(category.slug)}
                     className={`h-11 shrink-0 rounded-full border px-5 text-sm font-bold transition-colors duration-200 ${
                       isActive
                         ? "border-gold-500 bg-gold-500 text-white shadow-gold-sm"
                         : "border-white/15 bg-white/5 text-white/75 hover:border-green-500 hover:text-green-500"
                     }`}
                   >
-                    {category}
+                    {category.name}
                   </button>
                 );
               })}
@@ -117,33 +138,36 @@ export function BlogPageView() {
           </div>
         </div>
 
-        {visiblePosts.length > 0 ? (
+        {blogQuery.isError && visiblePosts.length === 0 && !blogQuery.data ? (
+          <ErrorStateCard
+            description="We could not load the blog posts. Refresh and try again."
+            isRefreshing={blogQuery.isFetching}
+            onRefresh={() => void blogQuery.refetch()}
+          />
+        ) : blogQuery.isLoading && visiblePosts.length === 0 ? (
+          <BlogGridSkeleton />
+        ) : visiblePosts.length > 0 ? (
           <div className="relative z-raised mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {visiblePosts.map((post, index) => (
               <BlogCard key={post.id} post={post} priority={index < 3} />
             ))}
           </div>
         ) : (
-          <div className="relative z-raised mx-auto mt-16 max-w-xl rounded-xl border border-white/10 bg-white/[0.06] p-8 text-center">
-            <p className="font-display text-3xl font-bold text-white">
-              No blog posts found
-            </p>
-            <p className="mt-3 text-base font-medium leading-7 text-white/65">
-              Try another search or switch categories for more Abirikky stories.
-            </p>
-          </div>
+          <EmptyStateCard
+            title="No blog posts found"
+            description="Try another search or switch categories for more Abirikky stories."
+          />
         )}
 
         {hasMorePosts ? (
           <div className="relative z-raised mt-12 flex justify-center">
             <button
               type="button"
-              onClick={() =>
-                setVisibleCount((count) => count + LOAD_MORE_COUNT)
-              }
+              onClick={() => setPage((currentPage) => currentPage + 1)}
+              disabled={blogQuery.isFetching}
               className="rounded-full border border-gold-500 px-10 py-4 text-base font-bold text-gold-500 transition-colors duration-200 hover:bg-gold-500 hover:text-white"
             >
-              Load More
+              {blogQuery.isFetching ? "Loading..." : "Load More"}
             </button>
           </div>
         ) : null}
@@ -159,9 +183,9 @@ function BlogCard({ post, priority }: { post: BlogPost; priority: boolean }) {
       className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.075] shadow-2xl backdrop-blur-sm transition-transform duration-300 hover:-translate-y-1 hover:border-gold-500/45 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-white/10">
-        <Image
+        <ResilientImage
           src={post.image}
-          alt={post.title}
+          alt={post.imageAlt ?? post.title}
           fill
           sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 100vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -191,6 +215,26 @@ function BlogCard({ post, priority }: { post: BlogPost; priority: boolean }) {
         </p>
       </div>
     </Link>
+  );
+}
+
+function BlogGridSkeleton() {
+  return (
+    <div className="relative z-raised mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: INITIAL_VISIBLE_COUNT }, (_, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.075] shadow-2xl"
+        >
+          <div className="aspect-[4/3] bg-white/10" />
+          <div className="space-y-4 p-6">
+            <div className="h-4 w-2/3 rounded-full bg-white/10" />
+            <div className="h-8 rounded-full bg-white/10" />
+            <div className="h-20 rounded-lg bg-white/10" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

@@ -41,7 +41,7 @@ export function Header() {
   };
 
   useEffect(() => {
-    setIsMounted(true);
+    queueMicrotask(() => setIsMounted(true));
   }, []);
 
   useEffect(() => {

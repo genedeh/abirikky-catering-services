@@ -1,24 +1,23 @@
 import { slugify } from "@/utils/slugify";
 
-export type MenuCategory =
-  | "All"
-  | "Rice"
-  | "Swallow"
-  | "Intercontinental"
-  | "Soups"
-  | "Protein"
-  | "Others";
+export type MenuCategory = string;
 
 export type MenuBadge = {
   label: MenuCategory;
   icon?: string;
+  slug?: string;
 };
 
 export type MenuCardItem = {
   id: string;
   name: string;
-  category: Exclude<MenuCategory, "All">;
+  slug?: string;
+  description?: string;
+  availabilityStatus?: string;
+  category: string;
+  categorySlug?: string;
   image: string;
+  imageAlt?: string;
 };
 
 export const menuBadges: MenuBadge[] = [
@@ -37,7 +36,7 @@ const heroImages = [
   "/hero/heroImage3.png",
 ];
 
-const categoryItems: Record<Exclude<MenuCategory, "All">, string[]> = {
+const categoryItems: Record<string, string[]> = {
   Rice: [
     "Party Jollof Rice",
     "Coconut Rice",
@@ -147,7 +146,7 @@ export const menuItems: MenuCardItem[] = Object.entries(categoryItems).flatMap(
     names.map((name, itemIndex) => ({
       id: `${category.toLowerCase()}-${itemIndex + 1}`,
       name,
-      category: category as Exclude<MenuCategory, "All">,
+      category,
       image: heroImages[(categoryIndex + itemIndex) % heroImages.length],
     }))
 );

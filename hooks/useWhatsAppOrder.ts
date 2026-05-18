@@ -39,8 +39,10 @@ export function useWhatsAppOrder({
     const storedOrder = readPendingWhatsAppOrder();
 
     if (storedOrder) {
-      setPendingOrder(storedOrder);
-      setIsStatusModalOpen(true);
+      queueMicrotask(() => {
+        setPendingOrder(storedOrder);
+        setIsStatusModalOpen(true);
+      });
     }
   }, []);
 

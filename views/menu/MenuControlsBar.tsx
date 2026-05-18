@@ -1,9 +1,10 @@
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
-import { menuBadges, type MenuCategory } from "@/constants/menuData";
+import { menuBadges, type MenuBadge, type MenuCategory } from "@/constants/menuData";
 
 type MenuControlsBarProps = {
   activeCategory: MenuCategory;
+  categories?: MenuBadge[];
   isAtEnd: boolean;
   isAtStart: boolean;
   isLoading: boolean;
@@ -18,6 +19,7 @@ type MenuControlsBarProps = {
 
 export function MenuControlsBar({
   activeCategory,
+  categories = menuBadges,
   isAtEnd,
   isAtStart,
   isLoading,
@@ -85,25 +87,21 @@ export function MenuControlsBar({
 
         <div className="-mx-container-x overflow-x-auto pl-container-x pr-28 pb-1 [scrollbar-width:none] sm:pr-36 [&::-webkit-scrollbar]:hidden">
           <div className="flex min-w-max items-center justify-start gap-3 md:justify-center">
-            {menuBadges.map((badge) => {
-              const isActive = badge.label === activeCategory;
+            {categories.map((badge) => {
+              const categoryValue = badge.slug ?? badge.label;
+              const isActive = categoryValue === activeCategory;
 
               return (
                 <button
-                  key={badge.label}
+                  key={categoryValue}
                   type="button"
-                  onClick={() => onCategoryChange(badge.label)}
+                  onClick={() => onCategoryChange(categoryValue)}
                   className={`inline-flex h-12 items-center justify-center gap-2 rounded-full border px-5 text-sm font-bold transition-all duration-200 ${
                     isActive
                       ? "border-gold-500 bg-gold-500 text-white shadow-gold-sm"
                       : "border-white/10 bg-white/[0.06] text-white/75 hover:border-gold-500/60 hover:text-white"
                   }`}
                 >
-                  {badge.icon ? (
-                    <span aria-hidden="true" className="text-lg">
-                      {badge.icon}
-                    </span>
-                  ) : null}
                   {badge.label}
                 </button>
               );

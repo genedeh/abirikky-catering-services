@@ -1,7 +1,18 @@
 export type GalleryItem = {
   id: string;
+  slug?: string;
   title: string;
   shape: "tall" | "wide" | "square" | "large" | "medium";
+  media?: {
+    id: string;
+    url: string;
+    alt?: string | null;
+    type?: string;
+    format?: string | null;
+    width?: number | null;
+    height?: number | null;
+    bytes?: number | null;
+  } | null;
 };
 
 export const galleryItems: GalleryItem[] = [

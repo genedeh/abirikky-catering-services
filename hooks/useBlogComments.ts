@@ -1,94 +1,52 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
-import {
-  blogCommentsBySlug,
-  type BlogComment,
-} from "@/constants/blogCommentsData";
+import { queryKeys } from "@/constants/queryKeys";
+import { getBlogComments } from "@/services/blogCommentsService";
+import { toBlogComment } from "@/types/cms";
 import {
   readBlogCommentUserName,
   type BlogCommentReaction,
   writeBlogCommentUserName,
 } from "@/utils/blogCommentStorage";
+import {
+  useCreateBlogCommentMutation,
+  useReactToBlogCommentMutation,
+} from "@/hooks/useBlogCommentMutations";
+import type { BlogComment } from "@/constants/blogCommentsData";
 
 const DEFAULT_VISIBLE_REPLY_COUNT = 1;
 const REPLY_BATCH_SIZE = 5;
 
-type RuntimeBlogCommentsState = {
-  reactions: Record<string, BlogCommentReaction>;
-  userComments: BlogComment[];
-  userRepliesByParent: Record<string, BlogComment[]>;
-};
-
-const createInitialCommentsState = (): RuntimeBlogCommentsState => ({
-  reactions: {},
-  userComments: [],
-  userRepliesByParent: {},
-});
-
-function countComments(comments: BlogComment[]) {
+function countComments(comments: BlogComment[]): number {
   return comments.reduce(
-    (total, comment) => total + 1 + comment.replies.length,
+    (total, comment) => total + 1 + countComments(comment.replies),
     0,
   );
 }
 
-function mergeUserReplies(
-  comments: BlogComment[],
-  userRepliesByParent: Record<string, BlogComment[]> = {},
-): BlogComment[] {
-  return comments.map((comment) => ({
-    ...comment,
-    replies: [
-      ...mergeUserReplies(comment.replies, userRepliesByParent),
-      ...(userRepliesByParent[comment.id] ?? []),
-    ],
-  }));
-}
-
-export function useBlogComments(postSlug: string) {
-  const [commentsState, setCommentsState] = useState<RuntimeBlogCommentsState>(
-    createInitialCommentsState,
-  );
-  const [userName, setUserName] = useState("");
+export function useBlogComments(postId?: string | null) {
+  const resolvedPostId = postId ?? "";
+  const [userName, setUserName] = useState(() => readBlogCommentUserName());
   const [expandedReplies, setExpandedReplies] = useState<Record<string, number>>(
     {},
   );
-
-  useEffect(() => {
-    setUserName(readBlogCommentUserName());
-  }, []);
-
-  useEffect(() => {
-    setCommentsState(createInitialCommentsState());
-    setExpandedReplies({});
-  }, [postSlug]);
-
-  const comments = useMemo(
-    () =>
-      mergeUserReplies(
-        [
-          ...commentsState.userComments,
-          ...(blogCommentsBySlug[postSlug] ?? []),
-        ],
-        commentsState.userRepliesByParent,
-      ),
-    [postSlug, commentsState.userComments, commentsState.userRepliesByParent],
+  const [reactions, setReactions] = useState<Record<string, BlogCommentReaction>>(
+    {},
   );
+  const commentsQuery = useQuery({
+    enabled: Boolean(postId),
+    queryKey: queryKeys.blog.comments(resolvedPostId),
+    queryFn: () => getBlogComments(resolvedPostId),
+    select: (data) => data.items.map(toBlogComment),
+  });
+  const createCommentMutation = useCreateBlogCommentMutation(resolvedPostId);
+  const reactionMutation = useReactToBlogCommentMutation(resolvedPostId);
 
+  const comments = useMemo(() => commentsQuery.data ?? [], [commentsQuery.data]);
   const totalCommentCount = useMemo(() => countComments(comments), [comments]);
-
-  const updateCommentsState = useCallback(
-    (
-      updater: (
-        currentState: RuntimeBlogCommentsState,
-      ) => RuntimeBlogCommentsState,
-    ) => {
-      setCommentsState((currentState) => updater(currentState));
-    },
-    [],
-  );
 
   const saveUserName = useCallback((nextUserName: string) => {
     const trimmedName = nextUserName.trim();
@@ -105,60 +63,32 @@ export function useBlogComments(postSlug: string) {
     (body: string, author: string) => {
       const trimmedBody = body.trim();
 
-      if (!trimmedBody) {
+      if (!trimmedBody || !resolvedPostId) {
         return;
       }
 
-      const newComment: BlogComment = {
-        id: `${postSlug}-user-comment-${Date.now()}`,
-        postSlug,
-        author,
-        body: trimmedBody,
-        createdAtLabel: "a minute ago",
-        likes: 0,
-        dislikes: 0,
-        replies: [],
-        isUserComment: true,
-      };
-
-      updateCommentsState((currentState) => ({
-        ...currentState,
-        userComments: [newComment, ...currentState.userComments],
-      }));
+      createCommentMutation.mutate({
+        parentCommentId: null,
+        commenterName: author,
+        commentText: trimmedBody,
+      });
     },
-    [postSlug, updateCommentsState],
+    [createCommentMutation, resolvedPostId],
   );
 
   const addReply = useCallback(
     (commentId: string, body: string, author: string) => {
       const trimmedBody = body.trim();
 
-      if (!trimmedBody) {
+      if (!trimmedBody || !resolvedPostId) {
         return;
       }
 
-      const newReply: BlogComment = {
-        id: `${commentId}-user-reply-${Date.now()}`,
-        postSlug,
-        author,
-        body: trimmedBody,
-        createdAtLabel: "a minute ago",
-        likes: 0,
-        dislikes: 0,
-        replies: [],
-        isUserComment: true,
-      };
-
-      updateCommentsState((currentState) => ({
-        ...currentState,
-        userRepliesByParent: {
-          ...currentState.userRepliesByParent,
-          [commentId]: [
-            ...(currentState.userRepliesByParent[commentId] ?? []),
-            newReply,
-          ],
-        },
-      }));
+      createCommentMutation.mutate({
+        parentCommentId: commentId,
+        commenterName: author,
+        commentText: trimmedBody,
+      });
 
       setExpandedReplies((currentCounts) => ({
         ...currentCounts,
@@ -166,14 +96,18 @@ export function useBlogComments(postSlug: string) {
           (currentCounts[commentId] ?? DEFAULT_VISIBLE_REPLY_COUNT) + 1,
       }));
     },
-    [postSlug, updateCommentsState],
+    [createCommentMutation, resolvedPostId],
   );
 
   const toggleReaction = useCallback(
     (commentId: string, reaction: BlogCommentReaction) => {
-      updateCommentsState((currentState) => {
-        const currentReaction = currentState.reactions[commentId];
-        const nextReactions = { ...currentState.reactions };
+      if (!resolvedPostId) {
+        return;
+      }
+
+      setReactions((currentReactions) => {
+        const currentReaction = currentReactions[commentId];
+        const nextReactions = { ...currentReactions };
 
         if (currentReaction === reaction) {
           delete nextReactions[commentId];
@@ -181,13 +115,12 @@ export function useBlogComments(postSlug: string) {
           nextReactions[commentId] = reaction;
         }
 
-        return {
-          ...currentState,
-          reactions: nextReactions,
-        };
+        return nextReactions;
       });
+
+      reactionMutation.mutate({ commentId, reactionType: reaction });
     },
-    [updateCommentsState],
+    [reactionMutation, resolvedPostId],
   );
 
   const expandMoreReplies = useCallback((commentId: string, replyCount: number) => {
@@ -219,9 +152,15 @@ export function useBlogComments(postSlug: string) {
     addReply,
     collapseReplies,
     comments,
+    commentsError: commentsQuery.error,
     expandMoreReplies,
     getVisibleReplyCount,
-    reactions: commentsState.reactions,
+    isCommentsError: commentsQuery.isError,
+    isCommentsLoading: commentsQuery.isLoading,
+    isCommentSubmitting: createCommentMutation.isPending,
+    isReactionSubmitting: reactionMutation.isPending,
+    reactions,
+    refetchComments: commentsQuery.refetch,
     saveUserName,
     toggleDislike: (commentId: string) => toggleReaction(commentId, "dislike"),
     toggleLike: (commentId: string) => toggleReaction(commentId, "like"),

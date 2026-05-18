@@ -3,6 +3,7 @@ import { DM_Sans, Playfair_Display, Supermercado_One } from "next/font/google";
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { BasketProvider } from "@/context/BasketContext";
 
 import "./globals.css";
@@ -26,6 +27,9 @@ const supermercadoOne = Supermercado_One({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.SITE_URL || "http://localhost:3000",
+  ),
   title: "Abirikky",
   description: "Abirikky restaurant landing page",
   icons: {
@@ -58,11 +62,13 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${dmSans.variable} ${supermercadoOne.variable}`}
     >
       <body className="font-body">
-        <BasketProvider>
-          <Header />
-          {children}
-          <Footer />
-        </BasketProvider>
+        <QueryProvider>
+          <BasketProvider>
+            <Header />
+            {children}
+            <Footer />
+          </BasketProvider>
+        </QueryProvider>
       </body>
     </html>
   );

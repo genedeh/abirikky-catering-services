@@ -6,14 +6,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { MenuCardContent } from "@/components/menu/MenuCardContent";
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
+import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
 import { MenuControlsBar } from "@/views/menu/MenuControlsBar";
 import { MenuDetailModal } from "@/views/menu/MenuDetailModal";
+import type { MenuCardItem, MenuCategory } from "@/constants/menuData";
 import {
-  menuItemsByCategory,
-  menuItemsBySlug,
-  type MenuCardItem,
-  type MenuCategory,
-} from "@/constants/menuData";
+  useMenuCategoriesQuery,
+  useMenuItemQuery,
+  useMenuItemsQuery,
+} from "@/hooks/useMenuQueries";
 
 const ITEMS_PER_PAGE = 12;
 const SHIMMER_ITEMS = Array.from({ length: ITEMS_PER_PAGE }, (_, index) => index);
@@ -45,71 +47,43 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
   const pathname = usePathname();
   const router = useRouter();
   const introRef = useRef<HTMLDivElement | null>(null);
-  const [activeCategory, setActiveCategory] = useState<MenuCategory>("All");
+  const [activeCategory, setActiveCategory] = useState<MenuCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [pageIndex, setPageIndex] = useState(0);
-  const [isPageLoading, setIsPageLoading] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<MenuCardItem | null>(null);
-  const [invalidSlug, setInvalidSlug] = useState<string | null>(null);
+  const [previewItem, setPreviewItem] = useState<MenuCardItem | null>(null);
   const [showFloatingControls, setShowFloatingControls] = useState(false);
-
-  const filteredItems = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    const categoryItems = menuItemsByCategory[activeCategory];
-
-    if (!query) {
-      return categoryItems;
-    }
-
-    return categoryItems.filter((item) =>
-      item.name.toLowerCase().includes(query),
-    );
-  }, [activeCategory, searchQuery]);
-
-  const pageCount = Math.max(1, Math.ceil(filteredItems.length / ITEMS_PER_PAGE));
-  const currentItems = filteredItems.slice(
-    pageIndex * ITEMS_PER_PAGE,
-    pageIndex * ITEMS_PER_PAGE + ITEMS_PER_PAGE,
+  const routeSlug = useMemo(
+    () =>
+      pathname === "/menu"
+        ? null
+        : initialSlug ?? pathname.replace(/^\/menu\//, "").split("/")[0],
+    [initialSlug, pathname],
   );
+  const menuQuery = useMenuItemsQuery({
+    page: pageIndex + 1,
+    limit: ITEMS_PER_PAGE,
+    category: activeCategory === "all" ? undefined : activeCategory,
+    search: searchQuery,
+    status: "available",
+  });
+  const categoriesQuery = useMenuCategoriesQuery();
+  const menuItemQuery = useMenuItemQuery(routeSlug);
+  const currentItems = menuQuery.data?.items ?? [];
+  const pagination = menuQuery.data?.pagination;
+  const pageCount = Math.max(1, pagination?.totalPages ?? 1);
   const isAtStart = pageIndex === 0;
-  const isAtEnd = pageIndex >= pageCount - 1;
+  const isAtEnd = !pagination?.hasNextPage;
+  const isPageLoading = menuQuery.isLoading || menuQuery.isFetching;
+  const selectedItem = previewItem ?? menuItemQuery.data ?? null;
+  const invalidSlug = routeSlug && menuItemQuery.isError ? routeSlug : null;
 
   useEffect(() => {
-    setPageIndex(0);
-    setIsPageLoading(false);
-  }, [activeCategory, searchQuery]);
-
-  useEffect(() => {
-    document.body.style.overflow = selectedItem ? "hidden" : "";
+    document.body.style.overflow = selectedItem && !invalidSlug ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
     };
-  }, [selectedItem]);
-
-  useEffect(() => {
-    const activeSlug =
-      pathname === "/menu"
-        ? null
-        : initialSlug ?? pathname.replace(/^\/menu\//, "").split("/")[0];
-
-    if (!activeSlug) {
-      setSelectedItem(null);
-      setInvalidSlug(null);
-      return;
-    }
-
-    const item = menuItemsBySlug[activeSlug];
-
-    if (!item) {
-      setSelectedItem(null);
-      setInvalidSlug(activeSlug);
-      return;
-    }
-
-    setSelectedItem(item);
-    setInvalidSlug(null);
-  }, [initialSlug, pathname]);
+  }, [invalidSlug, selectedItem]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -135,7 +109,7 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
 
   const handlePageChange = (nextPageIndex: number) => {
     if (
-      isPageLoading ||
+      menuQuery.isFetching ||
       nextPageIndex < 0 ||
       nextPageIndex > pageCount - 1 ||
       nextPageIndex === pageIndex
@@ -148,16 +122,20 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
 
   const handleCategoryChange = (category: MenuCategory) => {
     setActiveCategory(category);
+    setPageIndex(0);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setPageIndex(0);
   };
 
   const handleOpenPreview = (item: MenuCardItem) => {
-    setSelectedItem(item);
-    setInvalidSlug(null);
+    setPreviewItem(item);
   };
 
   const handleClosePreview = () => {
-    setSelectedItem(null);
-    setInvalidSlug(null);
+    setPreviewItem(null);
 
     if (pathname !== "/menu") {
       router.push("/menu");
@@ -177,7 +155,8 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
           >
             <MenuControlsBar
               activeCategory={activeCategory}
-              hasResults={filteredItems.length > 0}
+              categories={categoriesQuery.data}
+              hasResults={currentItems.length > 0}
               isAtEnd={isAtEnd}
               isAtStart={isAtStart}
               isLoading={isPageLoading}
@@ -186,7 +165,7 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
               onCategoryChange={handleCategoryChange}
               onNextPage={() => handlePageChange(pageIndex + 1)}
               onPreviousPage={() => handlePageChange(pageIndex - 1)}
-              onSearchChange={setSearchQuery}
+              onSearchChange={handleSearchChange}
             />
           </motion.div>
         ) : null}
@@ -230,7 +209,8 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
         <div className="relative z-raised mt-12">
           <MenuControlsBar
             activeCategory={activeCategory}
-            hasResults={filteredItems.length > 0}
+            categories={categoriesQuery.data}
+            hasResults={currentItems.length > 0}
             isAtEnd={isAtEnd}
             isAtStart={isAtStart}
             isLoading={isPageLoading}
@@ -238,15 +218,27 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
             onCategoryChange={handleCategoryChange}
             onNextPage={() => handlePageChange(pageIndex + 1)}
             onPreviousPage={() => handlePageChange(pageIndex - 1)}
-            onSearchChange={setSearchQuery}
+            onSearchChange={handleSearchChange}
           />
         </div>
 
-        {filteredItems.length > 0 ? (
+        {menuQuery.isError ? (
+          <ErrorStateCard
+            description="We could not load the menu from the CMS. Refresh and try again."
+            isRefreshing={menuQuery.isFetching}
+            onRefresh={() => void menuQuery.refetch()}
+          />
+        ) : isPageLoading && currentItems.length === 0 ? (
+          <div className="relative z-raised mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {SHIMMER_ITEMS.map((item) => (
+              <MenuCardSkeleton key={item} />
+            ))}
+          </div>
+        ) : currentItems.length > 0 ? (
           <div className="relative z-raised mt-12">
             <AnimatePresence mode="wait">
               <motion.div
-                key={isPageLoading ? `loading-${pageIndex}` : pageIndex}
+                key={pageIndex}
                 layout
                 initial={{ opacity: 0, y: 22, filter: "blur(6px)" }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -279,36 +271,28 @@ export function MenuPageView({ initialSlug }: MenuPageViewProps) {
             </AnimatePresence>
 
             <p className="mt-8 text-center text-sm font-bold text-white/45">
-              Page {pageIndex + 1} of {pageCount}
+              Page {pagination?.page ?? pageIndex + 1} of {pageCount}
             </p>
           </div>
         ) : (
-          <div className="relative z-raised mx-auto mt-16 max-w-xl rounded-xl border border-white/10 bg-white/[0.06] p-8 text-center">
-            <p className="font-display text-3xl font-bold text-white">
-              No dishes found
-            </p>
-            <p className="mt-3 text-base font-medium leading-7 text-white/65">
-              Try another search or switch categories to keep browsing the
-              menu.
-            </p>
-          </div>
+          <EmptyStateCard
+            title="No dishes found"
+            description="Try another search or switch categories to keep browsing the menu."
+          />
         )}
 
         {invalidSlug ? (
-          <div className="relative z-raised mx-auto mt-12 max-w-xl rounded-xl border border-gold-500/30 bg-gold-500/10 p-8 text-center">
-            <p className="font-display text-3xl font-bold text-white">
-              Menu item not found
-            </p>
-            <p className="mt-3 text-base font-medium leading-7 text-white/65">
-              We could not find a dish for “{invalidSlug}”. Browse the menu
-              below and choose another taste.
-            </p>
-          </div>
+          <ErrorStateCard
+            title="Menu item not found"
+            description={`We could not find a dish for "${invalidSlug}". Refresh or browse the menu below and choose another taste.`}
+            isRefreshing={menuItemQuery.isFetching}
+            onRefresh={() => void menuItemQuery.refetch()}
+          />
         ) : null}
       </section>
 
       <AnimatePresence>
-        {selectedItem ? (
+        {selectedItem && !invalidSlug ? (
           <MenuDetailModal item={selectedItem} onClose={handleClosePreview} />
         ) : null}
       </AnimatePresence>

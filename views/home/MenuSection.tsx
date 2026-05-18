@@ -2,53 +2,60 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { MenuCardContent } from "@/components/menu/MenuCardContent";
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
+import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
 import { MenuDetailModal } from "@/views/menu/MenuDetailModal";
+import { menuBadges, type MenuCardItem, type MenuCategory } from "@/constants/menuData";
 import {
-  menuBadges,
-  menuItemsByCategory,
-  type MenuCardItem,
-  type MenuCategory,
-} from "@/constants/menuData";
-
-const getMiddleIndex = (items: MenuCardItem[]) => Math.floor(items.length / 2);
+  useMenuCategoriesQuery,
+  useMenuSectionItemsQuery,
+} from "@/hooks/useMenuQueries";
 
 export function MenuSection() {
-  const [activeCategory, setActiveCategory] = useState<MenuCategory>("All");
-  const [activeIndex, setActiveIndex] = useState(() =>
-    getMiddleIndex(menuItemsByCategory.All)
-  );
+  const [activeCategory, setActiveCategory] = useState<MenuCategory>("all");
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuCardItem | null>(null);
-
-  const activeItems = menuItemsByCategory[activeCategory];
+  const menuQuery = useMenuSectionItemsQuery({
+    limit: 15,
+    category: activeCategory,
+  });
+  const categoriesQuery = useMenuCategoriesQuery();
+  const badges = categoriesQuery.data ?? menuBadges;
+  const activeItems = useMemo(() => menuQuery.data ?? [], [menuQuery.data]);
+  const resolvedActiveIndex =
+    activeIndex === null
+      ? Math.max(0, Math.floor(activeItems.length / 2))
+      : Math.min(activeIndex, Math.max(0, activeItems.length - 1));
 
   const visibleItems = useMemo(
     () =>
-      [activeIndex - 1, activeIndex, activeIndex + 1]
+      [resolvedActiveIndex - 1, resolvedActiveIndex, resolvedActiveIndex + 1]
         .filter((itemIndex) => itemIndex >= 0 && itemIndex < activeItems.length)
         .map((itemIndex) => ({
           item: activeItems[itemIndex],
-          position: itemIndex - activeIndex,
+          position: itemIndex - resolvedActiveIndex,
         })),
-    [activeIndex, activeItems]
+    [activeItems, resolvedActiveIndex],
   );
 
-  const isAtStart = activeIndex === 0;
-  const isAtEnd = activeIndex === activeItems.length - 1;
+  const isAtStart = resolvedActiveIndex === 0;
+  const isAtEnd = resolvedActiveIndex === activeItems.length - 1;
 
   const handleCategoryChange = (category: MenuCategory) => {
     setActiveCategory(category);
-    setActiveIndex(getMiddleIndex(menuItemsByCategory[category]));
+    setActiveIndex(null);
   };
 
   const handlePrevious = () => {
-    setActiveIndex((index) => Math.max(index - 1, 0));
+    setActiveIndex(Math.max(resolvedActiveIndex - 1, 0));
   };
 
   const handleNext = () => {
-    setActiveIndex((index) => Math.min(index + 1, activeItems.length - 1));
+    setActiveIndex(Math.min(resolvedActiveIndex + 1, activeItems.length - 1));
   };
 
   const handleClosePreview = () => {
@@ -73,31 +80,45 @@ export function MenuSection() {
         </h2>
 
         <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-          {menuBadges.map((badge) => {
-            const isActive = badge.label === activeCategory;
+          {badges.map((badge) => {
+            const categoryValue = badge.slug ?? badge.label;
+            const isActive = categoryValue === activeCategory;
 
             return (
               <button
-                key={badge.label}
+                key={categoryValue}
                 type="button"
-                onClick={() => handleCategoryChange(badge.label)}
+                onClick={() => handleCategoryChange(categoryValue)}
                 className={`inline-flex h-14 min-w-24 items-center justify-center gap-2 rounded-full border px-6 text-sm font-semibold transition-all duration-200 sm:min-w-32 sm:text-base ${
                   isActive
                     ? "border-white bg-white text-gold-600 shadow-lg"
                     : "border-white/35 bg-white/5 text-white hover:border-white/70 hover:bg-white/10"
                 }`}
               >
-                {badge.icon ? (
-                  <span aria-hidden="true" className="text-xl">
-                    {badge.icon}
-                  </span>
-                ) : null}
                 {badge.label}
               </button>
             );
           })}
         </div>
 
+        {menuQuery.isError ? (
+          <ErrorStateCard
+            description="We could not load the featured menu. Refresh and try again."
+            isRefreshing={menuQuery.isFetching}
+            onRefresh={() => void menuQuery.refetch()}
+          />
+        ) : menuQuery.isLoading ? (
+          <div className="relative mx-auto mt-20 h-[38rem] max-w-[21rem] rounded-xl bg-white/20 p-7 shadow-2xl">
+            <div className="h-72 rounded-lg bg-white/20" />
+            <div className="mx-auto mt-6 h-8 w-3/4 rounded-full bg-white/25" />
+            <div className="mt-4 h-11 rounded-md bg-green-500/30" />
+          </div>
+        ) : activeItems.length === 0 ? (
+          <EmptyStateCard
+            title="No menu items yet"
+            description="Please check back soon for fresh Abirikky dishes."
+          />
+        ) : (
         <div className="relative mt-20 min-h-[38rem]">
           {!isAtStart ? (
             <button
@@ -152,14 +173,15 @@ export function MenuSection() {
             </p>
           )}
         </div>
+        )}
 
         <div className="mt-12 flex justify-center">
-          <a
+          <Link
             href="/menu"
             className="rounded-full bg-white px-10 py-4 text-base font-bold text-gold-600 shadow-lg transition-colors duration-200 hover:bg-cream-100"
           >
             See More
-          </a>
+          </Link>
         </div>
       </div>
 

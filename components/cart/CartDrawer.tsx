@@ -74,7 +74,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       return;
     }
 
-    setIsScrollbarVisible(false);
+    queueMicrotask(() => setIsScrollbarVisible(false));
     window.requestAnimationFrame(() => closeButtonRef.current?.focus());
 
     const handleKeyDown = (event: KeyboardEvent) => {

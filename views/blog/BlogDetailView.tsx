@@ -1,36 +1,89 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BlogCommentsPanel } from "@/components/blog/BlogCommentsPanel";
 import { BlogShareModal } from "@/components/blog/BlogShareModal";
+import { MarkdownRenderContent } from "@/components/MarkdownRenderContent";
+import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
+import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
+import { ResilientImage } from "@/components/ui/ResilientImage";
 import type { BlogPost } from "@/constants/blogData";
+import {
+  useBlogPostQuery,
+  useTrackBlogViewMutation,
+} from "@/hooks/useBlogQueries";
 import { useBlogComments } from "@/hooks/useBlogComments";
 
 type BlogDetailViewProps = {
-  post: BlogPost;
-  relatedPosts: BlogPost[];
+  slug: string;
 };
 
-export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
+export function BlogDetailView({ slug }: BlogDetailViewProps) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const trackedPostIdRef = useRef<string | null>(null);
+  const blogQuery = useBlogPostQuery(slug);
+  const post = blogQuery.data?.post;
+  const relatedPosts = blogQuery.data?.relatedPosts ?? [];
+  const trackViewMutation = useTrackBlogViewMutation(slug);
   const {
     addComment,
     addReply,
     collapseReplies,
     comments,
+    commentsError,
     expandMoreReplies,
     getVisibleReplyCount,
+    isCommentsError,
+    isCommentsLoading,
+    isCommentSubmitting,
     reactions,
+    refetchComments,
     saveUserName,
     toggleDislike,
     toggleLike,
     totalCommentCount,
     userName,
-  } = useBlogComments(post.slug);
+  } = useBlogComments(post?.id);
+
+  useEffect(() => {
+    if (!post?.id || trackedPostIdRef.current === post.id) {
+      return;
+    }
+
+    trackedPostIdRef.current = post.id;
+    trackViewMutation.mutate(post.id);
+  }, [post?.id, trackViewMutation]);
+
+  if (blogQuery.isLoading) {
+    return <BlogDetailSkeleton />;
+  }
+
+  if (blogQuery.isError) {
+    return (
+      <main className="relative min-h-screen pt-nav-h">
+        <ErrorStateCard
+          title="Blog post unavailable"
+          description="We could not load this blog post from the CMS. Refresh and try again."
+          isRefreshing={blogQuery.isFetching}
+          onRefresh={() => void blogQuery.refetch()}
+        />
+      </main>
+    );
+  }
+
+  if (!post) {
+    return (
+      <main className="relative min-h-screen pt-nav-h">
+        <EmptyStateCard
+          title="Blog post not found"
+          description="This story is not available right now."
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen w-full max-w-full overflow-x-hidden pt-nav-h">
@@ -55,9 +108,9 @@ export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
             </div>
 
             <div className="relative mt-5 aspect-[16/9] w-full max-w-[calc(100vw-3rem)] overflow-hidden rounded-lg border border-white/10 bg-white/10 shadow-2xl sm:max-w-full">
-              <Image
+              <ResilientImage
                 src={post.image}
-                alt={post.title}
+                alt={post.imageAlt ?? post.title}
                 fill
                 sizes="(min-width: 1280px) 900px, (min-width: 1024px) calc(100vw - 28rem), 100vw"
                 className="object-cover"
@@ -68,7 +121,7 @@ export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
 
             <div className="mt-6 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <h1 className="break-words [overflow-wrap:anywhere] font-display text-4xl font-bold leading-[0.98] text-white sm:text-5xl lg:text-6xl">
+                <h1 className="break-words font-display text-4xl font-bold leading-[0.98] text-white sm:text-5xl lg:text-6xl">
                   {post.title}
                 </h1>
                 <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.7rem] font-bold uppercase tracking-wider text-white/55">
@@ -87,7 +140,7 @@ export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
               <div className="flex min-w-0 flex-wrap items-center gap-3 text-xs font-bold text-white/75 sm:shrink-0">
                 <span className="inline-flex items-center gap-1.5">
                   <EyeIcon className="h-4 w-4 text-white" />
-                  {(post.commentCount * 0.4 + 4.8).toFixed(1)}k
+                  {post.viewsTotal ?? 0}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <PeopleIcon className="h-4 w-4 text-gold-500" />
@@ -119,15 +172,11 @@ export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
               </button>
             </div>
 
-            <div className="mt-10 w-full max-w-[calc(100vw-3rem)] break-words [overflow-wrap:anywhere] text-sm font-medium leading-8 text-white/75 sm:max-w-3xl sm:text-base">
+            <div className="mt-10 w-full max-w-[calc(100vw-3rem)] break-words text-sm font-medium leading-8 text-white/75 sm:max-w-3xl sm:text-base">
               <p className="mb-8 text-lg leading-8 text-white/80">
                 {post.excerpt}
               </p>
-              {post.content.map((paragraph) => (
-                <p key={paragraph} className="mb-7 max-w-full last:mb-0">
-                  {paragraph}
-                </p>
-              ))}
+              <MarkdownRenderContent content={post.markdownContent} />
             </div>
           </div>
 
@@ -157,8 +206,12 @@ export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
 
       <BlogCommentsPanel
         comments={comments}
+        errorMessage={commentsError instanceof Error ? commentsError.message : undefined}
         getVisibleReplyCount={getVisibleReplyCount}
         isOpen={isCommentsOpen}
+        isError={isCommentsError}
+        isLoading={isCommentsLoading}
+        isSubmitting={isCommentSubmitting}
         reactions={reactions}
         totalCommentCount={totalCommentCount}
         userName={userName}
@@ -167,6 +220,7 @@ export function BlogDetailView({ post, relatedPosts }: BlogDetailViewProps) {
         onClose={() => setIsCommentsOpen(false)}
         onCollapseReplies={collapseReplies}
         onExpandReplies={expandMoreReplies}
+        onRefresh={() => void refetchComments()}
         onSaveUserName={saveUserName}
         onToggleDislike={toggleDislike}
         onToggleLike={toggleLike}
@@ -188,9 +242,9 @@ function RelatedStoryCard({ post }: { post: BlogPost }) {
       className="group w-[16rem] max-w-[78vw] shrink-0 snap-start overflow-hidden rounded-lg border border-white/15 bg-white/[0.065] backdrop-blur-sm transition-colors duration-200 hover:border-gold-500/50 sm:w-[18rem] lg:w-full lg:max-w-none"
     >
       <div className="relative aspect-[16/10] bg-white/10">
-        <Image
+        <ResilientImage
           src={post.image}
-          alt={post.title}
+          alt={post.imageAlt ?? post.title}
           fill
           sizes="(min-width: 1024px) 352px, 288px"
           className="object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
@@ -204,7 +258,7 @@ function RelatedStoryCard({ post }: { post: BlogPost }) {
           </span>
           <span className="inline-flex items-center gap-1 text-[0.65rem] font-black text-white/70">
             <EyeIcon className="h-3.5 w-3.5" />
-            {(post.commentCount * 0.3 + 3.1).toFixed(1)}k
+            {post.viewsTotal ?? 0}
           </span>
         </div>
         <h3 className="font-display text-xl font-bold leading-tight text-white transition-colors duration-200 group-hover:text-gold-500">
@@ -212,6 +266,23 @@ function RelatedStoryCard({ post }: { post: BlogPost }) {
         </h3>
       </div>
     </Link>
+  );
+}
+
+function BlogDetailSkeleton() {
+  return (
+    <main className="relative min-h-screen pt-nav-h">
+      <div className="mx-auto w-full max-w-container px-container-x py-12">
+        <div className="aspect-[16/9] rounded-lg bg-white/10" />
+        <div className="mt-8 h-16 max-w-3xl rounded-full bg-white/10" />
+        <div className="mt-5 h-5 max-w-xl rounded-full bg-white/10" />
+        <div className="mt-10 space-y-5">
+          <div className="h-5 max-w-3xl rounded-full bg-white/10" />
+          <div className="h-5 max-w-2xl rounded-full bg-white/10" />
+          <div className="h-5 max-w-3xl rounded-full bg-white/10" />
+        </div>
+      </div>
+    </main>
   );
 }
 

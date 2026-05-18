@@ -2,15 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, RefreshCw, X } from "lucide-react";
 
 import type { BlogComment } from "@/constants/blogCommentsData";
 import type { BlogCommentReaction } from "@/utils/blogCommentStorage";
 
 type BlogCommentsPanelProps = {
   comments: BlogComment[];
+  errorMessage?: string;
   getVisibleReplyCount: (commentId: string) => number;
   isOpen: boolean;
+  isError?: boolean;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
   reactions: Record<string, BlogCommentReaction>;
   totalCommentCount: number;
   userName: string;
@@ -19,6 +23,7 @@ type BlogCommentsPanelProps = {
   onClose: () => void;
   onCollapseReplies: (commentId: string) => void;
   onExpandReplies: (commentId: string, replyCount: number) => void;
+  onRefresh: () => void;
   onSaveUserName: (userName: string) => void;
   onToggleDislike: (commentId: string) => void;
   onToggleLike: (commentId: string) => void;
@@ -38,8 +43,12 @@ type PendingSubmit =
 
 export function BlogCommentsPanel({
   comments,
+  errorMessage,
   getVisibleReplyCount,
   isOpen,
+  isError = false,
+  isLoading = false,
+  isSubmitting = false,
   reactions,
   totalCommentCount,
   userName,
@@ -48,6 +57,7 @@ export function BlogCommentsPanel({
   onClose,
   onCollapseReplies,
   onExpandReplies,
+  onRefresh,
   onSaveUserName,
   onToggleDislike,
   onToggleLike,
@@ -80,13 +90,26 @@ export function BlogCommentsPanel({
     };
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (isOpen) {
-      setNameDraft(userName);
-    }
-  }, [isOpen, userName]);
+  const orderedComments = useMemo(() => {
+    const normalizedUserName = userName.trim().toLowerCase();
 
-  const orderedComments = useMemo(() => comments, [comments]);
+    if (!normalizedUserName) {
+      return comments;
+    }
+
+    return [...comments].sort((firstComment, secondComment) => {
+      const isFirstUserComment =
+        firstComment.author.trim().toLowerCase() === normalizedUserName;
+      const isSecondUserComment =
+        secondComment.author.trim().toLowerCase() === normalizedUserName;
+
+      if (isFirstUserComment === isSecondUserComment) {
+        return 0;
+      }
+
+      return isFirstUserComment ? -1 : 1;
+    });
+  }, [comments, userName]);
 
   const submitComment = (body: string, target: ReplyTarget, author: string) => {
     if (target) {
@@ -110,6 +133,7 @@ export function BlogCommentsPanel({
     }
 
     if (!userName.trim()) {
+      setNameDraft(userName);
       setPendingSubmit({
         body: trimmedDraft,
         replyTarget,
@@ -182,6 +206,7 @@ export function BlogCommentsPanel({
 
             <Composer
               draft={draft}
+              isSubmitting={isSubmitting}
               replyTarget={replyTarget}
               onCancelReply={() => setReplyTarget(null)}
               onDraftChange={setDraft}
@@ -192,21 +217,54 @@ export function BlogCommentsPanel({
               ref={commentListRef}
               className="cart-drawer-scroll min-h-0 flex-1 overflow-y-auto"
             >
-              <div className="divide-y divide-white/10">
-                {orderedComments.map((comment) => (
-                  <CommentItem
-                    key={comment.id}
-                    comment={comment}
-                    getVisibleReplyCount={getVisibleReplyCount}
-                    reactions={reactions}
-                    onCollapseReplies={onCollapseReplies}
-                    onExpandReplies={onExpandReplies}
-                    onReply={(target) => setReplyTarget(target)}
-                    onToggleDislike={onToggleDislike}
-                    onToggleLike={onToggleLike}
-                  />
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="flex h-full min-h-64 items-center justify-center text-white/70">
+                  <Loader2 aria-hidden="true" className="h-10 w-10 animate-spin" />
+                </div>
+              ) : isError ? (
+                <div className="p-6 text-center">
+                  <p className="font-display text-3xl font-bold text-white">
+                    Comments unavailable
+                  </p>
+                  <p className="mt-3 text-sm font-medium leading-6 text-white/65">
+                    {errorMessage ||
+                      "We could not load the comments. Refresh and try again."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onRefresh}
+                    className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-gold-500 px-5 text-sm font-bold text-white transition-colors duration-200 hover:bg-gold-600"
+                  >
+                    <RefreshCw aria-hidden="true" className="h-4 w-4" />
+                    Refresh
+                  </button>
+                </div>
+              ) : orderedComments.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="font-display text-3xl font-bold text-white">
+                    No comments yet
+                  </p>
+                  <p className="mt-3 text-sm font-medium leading-6 text-white/65">
+                    Start the conversation with a helpful note.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-white/10">
+                  {orderedComments.map((comment) => (
+                    <CommentItem
+                      key={comment.id}
+                      comment={comment}
+                      getVisibleReplyCount={getVisibleReplyCount}
+                      reactions={reactions}
+                      onCollapseReplies={onCollapseReplies}
+                      onExpandReplies={onExpandReplies}
+                      onReply={(target) => setReplyTarget(target)}
+                      onToggleDislike={onToggleDislike}
+                      onToggleLike={onToggleLike}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </motion.aside>
 
@@ -225,12 +283,14 @@ export function BlogCommentsPanel({
 
 function Composer({
   draft,
+  isSubmitting,
   replyTarget,
   onCancelReply,
   onDraftChange,
   onSubmit,
 }: {
   draft: string;
+  isSubmitting: boolean;
   replyTarget: ReplyTarget;
   onCancelReply: () => void;
   onDraftChange: (value: string) => void;
@@ -267,9 +327,10 @@ function Composer({
           <button
             type="button"
             onClick={onSubmit}
+            disabled={isSubmitting || !draft.trim()}
             className="mt-3 h-12 bg-gold-500 px-8 text-sm font-black text-white transition-colors duration-200 hover:bg-green-500"
           >
-            Post comment
+            {isSubmitting ? "Posting..." : "Post comment"}
           </button>
         </div>
       </div>
@@ -378,9 +439,6 @@ function CommentBody({
   onToggleDislike: (commentId: string) => void;
   onToggleLike: (commentId: string) => void;
 }) {
-  const displayedLikes = comment.likes + (reaction === "like" ? 1 : 0);
-  const displayedDislikes = comment.dislikes + (reaction === "dislike" ? 1 : 0);
-
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-2">
@@ -388,6 +446,11 @@ function CommentBody({
         <span className="text-xs font-bold text-white/45">
           {comment.createdAtLabel}
         </span>
+        {comment.status === "pending" || comment.isUserComment ? (
+          <span className="rounded-full bg-gold-500/15 px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-wider text-gold-300">
+            Pending
+          </span>
+        ) : null}
       </div>
       <p className="mt-2 whitespace-pre-line break-words text-sm font-medium leading-7 text-white/72">
         {comment.body}
@@ -396,14 +459,14 @@ function CommentBody({
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <ReactionButton
           active={reaction === "like"}
-          count={displayedLikes}
+          count={comment.likes}
           label={`Like comment by ${comment.author}`}
           onClick={() => onToggleLike(comment.id)}
           type="like"
         />
         <ReactionButton
           active={reaction === "dislike"}
-          count={displayedDislikes}
+          count={comment.dislikes}
           label={`Dislike comment by ${comment.author}`}
           onClick={() => onToggleDislike(comment.id)}
           type="dislike"

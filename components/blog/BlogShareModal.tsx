@@ -29,8 +29,10 @@ export function BlogShareModal({
 
   useEffect(() => {
     if (isOpen && typeof window !== "undefined") {
-      setShareUrl(window.location.href);
-      setHasCopied(false);
+      queueMicrotask(() => {
+        setShareUrl(window.location.href);
+        setHasCopied(false);
+      });
     }
   }, [isOpen]);
 

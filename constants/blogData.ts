@@ -1,26 +1,24 @@
 import { slugify } from "@/utils/slugify";
 
-export type BlogCategory =
-  | "All"
-  | "Events"
-  | "Catering Tips"
-  | "Food Stories"
-  | "Behind the Kitchen"
-  | "Announcements";
+export type BlogCategory = string;
 
 export type BlogPost = {
   id: string;
   title: string;
   slug: string;
-  category: Exclude<BlogCategory, "All">;
+  category: string;
+  categorySlug?: string;
   excerpt: string;
   content: string[];
+  markdownContent?: string;
   author: string;
   publishedAt: string;
   readTime: string;
   commentCount: number;
   image: string;
+  imageAlt?: string;
   featured: boolean;
+  viewsTotal?: number;
 };
 
 export const blogCategories: BlogCategory[] = [

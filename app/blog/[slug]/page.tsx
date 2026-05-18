@@ -1,6 +1,5 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
-import { blogPosts, blogPostsBySlug } from "@/constants/blogData";
 import { BlogDetailView } from "@/views/blog/BlogDetailView";
 
 type BlogDetailPageProps = {
@@ -9,42 +8,104 @@ type BlogDetailPageProps = {
   }>;
 };
 
-export async function generateMetadata({ params }: BlogDetailPageProps) {
+type CmsBlogPostMetadata = {
+  post: {
+    title: string;
+    slug: string;
+    excerpt?: string | null;
+    publishedAt?: string | null;
+    coverImage?: {
+      url?: string | null;
+      alt?: string | null;
+      width?: number | null;
+      height?: number | null;
+    } | null;
+  };
+};
+
+export async function generateMetadata({
+  params,
+}: BlogDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPostsBySlug[slug];
+  const data = await getBlogPostMetadata(slug);
+  const post = data?.post;
 
   if (!post) {
     return {
-      title: "Blog Not Found | Abirikky",
+      title: "Blog Not Found | Abirikky Blog",
+      description: "This Abirikky blog post is not available right now.",
     };
   }
 
-  return {
-    title: `${post.title} | Abirikky Blog`,
-    description: post.excerpt,
-  };
-}
+  const title = `${post.title} | Abirikky Blog`;
+  const description =
+    post.excerpt || "Read the latest catering story from Abirikky.";
+  const canonicalUrl = `/blog/${post.slug}`;
+  const imageUrl = post.coverImage?.url;
+  const images = imageUrl
+    ? [
+        {
+          url: imageUrl,
+          width: post.coverImage?.width ?? 1200,
+          height: post.coverImage?.height ?? 630,
+          alt: post.coverImage?.alt ?? post.title,
+        },
+      ]
+    : undefined;
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({
-    slug: post.slug,
-  }));
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url: canonicalUrl,
+      publishedTime: post.publishedAt ?? undefined,
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : undefined,
+    },
+  };
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const { slug } = await params;
-  const post = blogPostsBySlug[slug];
 
-  if (!post) {
-    notFound();
+  return <BlogDetailView slug={slug} />;
+}
+
+async function getBlogPostMetadata(slug: string) {
+  const cmsApiUrl = process.env.CMS_API_URL;
+
+  if (!cmsApiUrl) {
+    return null;
   }
 
-  const relatedPosts = blogPosts
-    .filter(
-      (relatedPost) =>
-        relatedPost.category === post.category && relatedPost.id !== post.id,
-    )
-    .slice(0, 3);
+  try {
+    const response = await fetch(
+      new URL(
+        `/api/public/blog-posts/${encodeURIComponent(slug)}?includeRelated=true`,
+        cmsApiUrl,
+      ),
+      {
+        next: { revalidate: 300 },
+      },
+    );
 
-  return <BlogDetailView post={post} relatedPosts={relatedPosts} />;
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as CmsBlogPostMetadata;
+  } catch {
+    return null;
+  }
 }
