@@ -25,9 +25,6 @@ export function useBasket(item?: MenuCardItem) {
   );
 
   const quantity = item ? basketItems[item.id]?.quantity ?? 0 : 0;
-  const remainingCount = item
-    ? Math.max(item.itemsLeft - quantity, 0)
-    : 0;
 
   const add = useCallback(
     (menuItem: MenuCardItem) => {
@@ -68,7 +65,6 @@ export function useBasket(item?: MenuCardItem) {
     decrement,
     increment,
     quantity,
-    remainingCount,
     remove,
     totalQuantity,
   };

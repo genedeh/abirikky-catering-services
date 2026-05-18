@@ -41,6 +41,8 @@ export function ServicesSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const leftViewportRef = useRef<HTMLDivElement>(null);
   const leftTrackRef = useRef<HTMLDivElement>(null);
+  const shapeRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -48,12 +50,50 @@ export function ServicesSection() {
     const section = sectionRef.current;
     const leftViewport = leftViewportRef.current;
     const leftTrack = leftTrackRef.current;
+    const shape = shapeRef.current;
+    const image = imageRef.current;
 
-    if (!section || !leftViewport || !leftTrack) {
+    if (!section || !leftViewport || !leftTrack || !shape || !image) {
       return;
     }
 
     const context = gsap.context(() => {
+      const revealTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 68%",
+          toggleActions: "play none none reset",
+        },
+      });
+
+      gsap.set(shape, {
+        opacity: 0,
+        xPercent: 115,
+      });
+      gsap.set(image, {
+        opacity: 0,
+        scale: 0.92,
+        transformOrigin: "50% 50%",
+      });
+
+      revealTimeline
+        .to(shape, {
+          opacity: 1,
+          xPercent: 0,
+          duration: 0.85,
+          ease: "power3.out",
+        })
+        .to(
+          image,
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.68,
+            ease: "back.out(1.45)",
+          },
+          "-=0.24",
+        );
+
       const media = gsap.matchMedia();
 
       media.add("(min-width: 1024px)", () => {
@@ -196,17 +236,21 @@ export function ServicesSection() {
             fun mi
           </div>
 
-          <div className="absolute right-4 top-1/2 h-[28rem] w-[18rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:right-10 sm:h-[33rem] sm:w-[21rem] md:bottom-8 md:right-auto md:left-1/2 md:top-auto md:h-[18rem] md:w-[34rem] md:-translate-x-1/2 md:translate-y-0 lg:right-8 lg:left-auto lg:top-1/2 lg:bottom-auto lg:h-[38rem] lg:w-[24rem] lg:-translate-x-0 lg:-translate-y-1/2" />
+          <div className="absolute right-4 top-1/2 h-[28rem] w-[18rem] -translate-y-1/2 sm:right-10 sm:h-[33rem] sm:w-[21rem] md:bottom-8 md:right-auto md:left-1/2 md:top-auto md:h-[18rem] md:w-[34rem] md:-translate-x-1/2 md:translate-y-0 lg:right-8 lg:left-auto lg:top-1/2 lg:bottom-auto lg:h-[38rem] lg:w-[24rem] lg:-translate-x-0 lg:-translate-y-1/2">
+            <div ref={shapeRef} className="h-full w-full rounded-lg bg-gold-500" />
+          </div>
 
           <div className="pointer-events-none absolute right-[calc(5.5rem-180px)] top-[58%] z-raised h-[30rem] w-[30rem] -translate-y-1/2 sm:right-[calc(7rem-180px)] sm:h-[36rem] sm:w-[36rem] md:bottom-0 md:right-0 md:top-auto md:h-[30rem] md:w-[40rem] md:translate-y-0 lg:right-[calc(8.5rem-180px)] lg:top-[58%] lg:bottom-auto lg:h-[43rem] lg:w-[43rem] lg:-translate-y-1/2">
-            <Image
-              src="/section/sectionImage2.png"
-              alt="Catering service dish"
-              fill
-              sizes="(min-width: 1024px) 688px, (min-width: 640px) 576px, 480px"
-              className="object-contain drop-shadow-2xl"
-              loading="eager"
-            />
+            <div ref={imageRef} className="relative h-full w-full">
+              <Image
+                src="/section/sectionImage2.png"
+                alt="Catering service dish"
+                fill
+                sizes="(min-width: 1024px) 688px, (min-width: 640px) 576px, 480px"
+                className="object-contain drop-shadow-2xl"
+                loading="eager"
+              />
+            </div>
           </div>
         </div>
       </div>

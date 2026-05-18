@@ -1,4 +1,9 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const floatingAccents = [
   {
@@ -24,8 +29,67 @@ const floatingAccents = [
 ];
 
 export function AboutSection() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const shapeRef = useRef<HTMLDivElement | null>(null);
+  const imageRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const section = sectionRef.current;
+    const shape = shapeRef.current;
+    const image = imageRef.current;
+
+    if (!section || !shape || !image) {
+      return;
+    }
+
+    const context = gsap.context(() => {
+      const timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 68%",
+          toggleActions: "play none none reset",
+        },
+      });
+
+      gsap.set(shape, {
+        opacity: 0,
+        xPercent: -115,
+      });
+      gsap.set(image, {
+        opacity: 0,
+        scale: 0.92,
+        transformOrigin: "50% 50%",
+      });
+
+      timeline
+        .to(shape, {
+          opacity: 1,
+          xPercent: 0,
+          duration: 0.85,
+          ease: "power3.out",
+        })
+        .to(
+          image,
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.68,
+            ease: "back.out(1.45)",
+          },
+          "-=0.24",
+        );
+    }, section);
+
+    return () => {
+      context.revert();
+    };
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="about"
       className="relative z-base mt-24 overflow-hidden py-24 sm:mt-28 sm:py-28 lg:mt-36 lg:py-32"
     >
@@ -47,17 +111,21 @@ export function AboutSection() {
 
       <div className="mx-auto grid w-full max-w-container items-center gap-14 px-container-x lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
         <div className="relative min-h-[28rem] md:min-h-[31rem] lg:min-h-[34rem]">
-          <div className="absolute left-4 top-1/2 h-[24rem] w-[16rem] -translate-y-1/2 rounded-lg bg-gold-500 sm:left-10 sm:h-[29rem] sm:w-[19rem] md:left-1/2 md:top-[45%] md:h-[18rem] md:w-[34rem] md:-translate-x-1/2 lg:left-14 lg:top-1/2 lg:h-[34rem] lg:w-[22rem] lg:-translate-x-0" />
+          <div className="absolute left-4 top-1/2 h-[24rem] w-[16rem] -translate-y-1/2 sm:left-10 sm:h-[29rem] sm:w-[19rem] md:left-1/2 md:top-[45%] md:h-[18rem] md:w-[34rem] md:-translate-x-1/2 lg:left-14 lg:top-1/2 lg:h-[34rem] lg:w-[22rem] lg:-translate-x-0">
+            <div ref={shapeRef} className="h-full w-full rounded-lg bg-gold-500" />
+          </div>
 
           <div className="pointer-events-none absolute left-[-2rem] top-1/2 z-raised h-[28rem] w-[36rem] -translate-y-1/2 sm:left-[-1rem] sm:h-[33rem] sm:w-[43rem] md:left-auto md:right-0 md:top-[59%] md:h-[26rem] md:w-[40rem] lg:left-[-2rem] lg:right-auto lg:top-1/2 lg:h-[40rem] lg:w-[52rem]">
-            <Image
-              src="/hero/heroImage3.png"
-              alt="Prepared Nigerian dish"
-              fill
-              sizes="(min-width: 1024px) 832px, (min-width: 640px) 688px, 576px"
-              className="object-contain drop-shadow-2xl"
-              loading="eager"
-            />
+            <div ref={imageRef} className="relative h-full w-full">
+              <Image
+                src="/hero/heroImage3.png"
+                alt="Prepared Nigerian dish"
+                fill
+                sizes="(min-width: 1024px) 832px, (min-width: 640px) 688px, 576px"
+                className="object-contain drop-shadow-2xl"
+                loading="eager"
+              />
+            </div>
           </div>
         </div>
 

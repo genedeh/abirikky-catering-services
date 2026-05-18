@@ -1,5 +1,16 @@
+"use client";
+
 import Image from "next/image";
-import { CirclePlay, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { MessageCircle, UtensilsCrossed } from "lucide-react";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+import {
+  normalizeWhatsAppPhone,
+  WHATSAPP_ORDER_PHONE,
+} from "@/utils/whatsappOrder";
 
 const floatingPlates = [
   {
@@ -43,8 +54,79 @@ const floatingAccents = [
 ];
 
 export function HeroSection() {
+  const whatsappUrl = `https://wa.me/${normalizeWhatsAppPhone(WHATSAPP_ORDER_PHONE)}`;
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const goldCircleRef = useRef<HTMLDivElement | null>(null);
+  const goldGlowRef = useRef<HTMLDivElement | null>(null);
+  const plateRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const section = sectionRef.current;
+    const goldCircle = goldCircleRef.current;
+    const goldGlow = goldGlowRef.current;
+    const plates = plateRefs.current.filter(Boolean);
+
+    if (!section || !goldCircle || !goldGlow || plates.length === 0) {
+      return;
+    }
+
+    const context = gsap.context(() => {
+      const timeline = gsap.timeline({
+        defaults: {
+          duration: 0.72,
+          ease: "back.out(1.7)",
+        },
+        scrollTrigger: {
+          trigger: section,
+          start: "top 72%",
+          toggleActions: "restart none none reset",
+        },
+      });
+
+      gsap.set([goldCircle, goldGlow, ...plates], {
+        opacity: 0,
+        scale: 0.42,
+        transformOrigin: "50% 50%",
+      });
+
+      timeline
+        .to(goldGlow, {
+          opacity: 1,
+          scale: 1,
+          duration: 0.56,
+          ease: "power3.out",
+        })
+        .to(
+          goldCircle,
+          {
+            opacity: 1,
+            scale: 1,
+          },
+          "-=0.34",
+        )
+        .to(
+          plates,
+          {
+            opacity: 1,
+            scale: 1,
+            stagger: 0.14,
+          },
+          "-=0.2",
+        );
+    }, section);
+
+    return () => {
+      context.revert();
+    };
+  }, []);
+
   return (
-    <section className="relative z-overlay min-h-screen overflow-hidden pt-nav-h md:overflow-visible lg:z-sticky">
+    <section
+      ref={sectionRef}
+      className="relative z-overlay min-h-screen overflow-hidden pt-nav-h md:overflow-visible lg:z-sticky"
+    >
       <div className="pointer-events-none absolute -left-8 top-24 hidden select-none font-display text-[7rem] font-bold leading-none text-white/[0.035] sm:block md:text-[10rem] lg:left-0 lg:text-[13rem] xl:text-[16rem]">
         ounje
       </div>
@@ -80,32 +162,47 @@ export function HeroSection() {
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6 md:justify-start">
-            <a
-              href="#order"
+            <Link
+              href="/menu"
               className="inline-flex h-btn-h-lg items-center justify-center gap-3 rounded-lg bg-gold-500 px-7 font-semibold text-white shadow-gold-sm transition-colors duration-200 hover:bg-gold-600"
             >
-              <ShoppingBag aria-hidden="true" className="h-5 w-5" />
-              Order Now
-            </a>
+              <UtensilsCrossed aria-hidden="true" className="h-5 w-5" />
+              View Menu
+            </Link>
 
             <a
-              href="#how-to-order"
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex h-btn-h-lg items-center justify-center gap-3 bg-transparent px-2 font-semibold text-green-500 transition-colors duration-200 hover:text-green-400"
             >
-              <CirclePlay aria-hidden="true" className="h-9 w-9" />
-              How to Order
+              <MessageCircle aria-hidden="true" className="h-9 w-9" />
+              Chat on WhatsApp
             </a>
           </div>
         </div>
 
         <div className="pointer-events-none absolute bottom-[-7rem] right-[-22rem] z-base block h-[25rem] w-[38rem] md:bottom-[-8rem] md:right-[-13rem] md:top-[8rem] md:h-auto md:w-[58vw] md:max-w-[52rem] lg:right-[-11rem] xl:right-[-9rem]">
           <div className="relative h-full min-h-[25rem] md:min-h-[33rem]">
-            <div className="absolute right-[-5rem] top-1/2 aspect-square w-[min(68vw,58rem)] -translate-y-1/2 rounded-full bg-gold-300/10 blur-sm" />
-            <div className="absolute right-0 top-1/2 aspect-square w-[min(58vw,48rem)] -translate-y-1/2 rounded-full bg-gold-500" />
+            <div className="absolute right-[-5rem] top-1/2 aspect-square w-[min(68vw,58rem)] -translate-y-1/2">
+              <div
+                ref={goldGlowRef}
+                className="h-full w-full rounded-full bg-gold-300/10 blur-sm"
+              />
+            </div>
+            <div className="absolute right-0 top-1/2 aspect-square w-[min(58vw,48rem)] -translate-y-1/2">
+              <div
+                ref={goldCircleRef}
+                className="h-full w-full rounded-full bg-gold-500"
+              />
+            </div>
 
-            {floatingPlates.map((plate) => (
+            {floatingPlates.map((plate, index) => (
               <div
                 key={plate.src}
+                ref={(node) => {
+                  plateRefs.current[index] = node;
+                }}
                 aria-hidden="true"
                 className={`pointer-events-none absolute z-raised ${plate.className}`}
               >

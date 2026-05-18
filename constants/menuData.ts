@@ -19,7 +19,6 @@ export type MenuCardItem = {
   name: string;
   category: Exclude<MenuCategory, "All">;
   image: string;
-  itemsLeft: number;
 };
 
 export const menuBadges: MenuBadge[] = [
@@ -37,8 +36,6 @@ const heroImages = [
   "/hero/heroImage2.png",
   "/hero/heroImage3.png",
 ];
-
-const itemsLeftPattern = [12, 9, 15, 7, 18, 11, 6, 14, 10, 8, 16, 5, 13, 19, 4];
 
 const categoryItems: Record<Exclude<MenuCategory, "All">, string[]> = {
   Rice: [
@@ -152,7 +149,6 @@ export const menuItems: MenuCardItem[] = Object.entries(categoryItems).flatMap(
       name,
       category: category as Exclude<MenuCategory, "All">,
       image: heroImages[(categoryIndex + itemIndex) % heroImages.length],
-      itemsLeft: itemsLeftPattern[(categoryIndex + itemIndex) % itemsLeftPattern.length],
     }))
 );
 

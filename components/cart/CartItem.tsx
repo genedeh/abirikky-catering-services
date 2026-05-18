@@ -17,14 +17,12 @@ function toMenuCardItem(item: BasketStateItem): MenuCardItem {
     name: item.name,
     category: item.category,
     image: item.image,
-    itemsLeft: item.originalItemsLeft,
   };
 }
 
 export function CartItem({ item }: CartItemProps) {
   const menuItem = toMenuCardItem(item);
-  const { decrement, increment, remove, remainingCount } = useBasket(menuItem);
-  const canIncrement = remainingCount > 0;
+  const { decrement, increment, remove } = useBasket(menuItem);
 
   return (
     <article className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/10 py-5 sm:grid-cols-[8rem_1fr]">
@@ -46,9 +44,6 @@ export function CartItem({ item }: CartItemProps) {
             </h3>
             <p className="mt-1 text-sm font-bold text-gold-500">
               {item.category}
-            </p>
-            <p className="mt-2 text-sm font-semibold text-white/55">
-              {remainingCount} items left
             </p>
           </div>
 
@@ -80,8 +75,7 @@ export function CartItem({ item }: CartItemProps) {
               type="button"
               aria-label={`Increase ${item.name} quantity`}
               onClick={() => increment(menuItem)}
-              disabled={!canIncrement}
-              className="flex h-11 items-center justify-center bg-green-500 text-white transition-colors duration-200 hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
+              className="flex h-11 items-center justify-center bg-green-500 text-white transition-colors duration-200 hover:bg-green-600"
             >
               <Plus aria-hidden="true" className="h-4 w-4" />
             </button>

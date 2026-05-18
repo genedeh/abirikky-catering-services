@@ -23,10 +23,9 @@ export function BasketQuantityControl({
   item,
 }: BasketQuantityControlProps) {
   const controlRef = useRef<HTMLDivElement | null>(null);
-  const { add, decrement, increment, quantity, remainingCount } = useBasket(item);
+  const { add, decrement, increment, quantity } = useBasket(item);
   const { flyToBasket } = useFlyToBasket();
   const hasQuantity = quantity > 0;
-  const canIncrement = remainingCount > 0;
   const isLightCounter = counterTone === "light";
 
   const triggerFly = () => {
@@ -47,19 +46,11 @@ export function BasketQuantityControl({
   };
 
   const handleAdd = () => {
-    if (!canIncrement) {
-      return;
-    }
-
     add(item);
     triggerFly();
   };
 
   const handleIncrement = () => {
-    if (!canIncrement) {
-      return;
-    }
-
     increment(item);
     triggerFly();
   };
@@ -79,9 +70,8 @@ export function BasketQuantityControl({
           <motion.button
             key="add"
             type="button"
-            disabled={!canIncrement}
             onClick={handleAdd}
-            className={`${buttonClassName} disabled:cursor-not-allowed disabled:opacity-50`}
+            className={buttonClassName}
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
@@ -129,9 +119,8 @@ export function BasketQuantityControl({
             <button
               type="button"
               aria-label={`Add one ${item.name}`}
-              disabled={!canIncrement}
               onClick={handleIncrement}
-              className="flex h-11 items-center justify-center bg-green-500 text-white transition-colors duration-200 hover:bg-green-600 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
+              className="flex h-11 items-center justify-center bg-green-500 text-white transition-colors duration-200 hover:bg-green-600"
             >
               <Plus aria-hidden="true" className="h-4 w-4" />
             </button>

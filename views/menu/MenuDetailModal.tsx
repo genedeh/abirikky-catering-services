@@ -7,7 +7,6 @@ import { useRef, useState } from "react";
 
 import { BasketQuantityControl } from "@/components/basket/BasketQuantityControl";
 import type { MenuCardItem, MenuCategory } from "@/constants/menuData";
-import { useBasket } from "@/hooks/useBasket";
 
 const categoryBadgeStyles: Record<Exclude<MenuCategory, "All">, string> = {
   Rice: "border-gold-500/40 bg-gold-500/18 text-gold-300",
@@ -25,7 +24,6 @@ type MenuDetailModalProps = {
 
 export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
   const [previewZoom, setPreviewZoom] = useState(1);
-  const { remainingCount } = useBasket(item);
   const imageRef = useRef<HTMLDivElement | null>(null);
 
   const handleZoomIn = () => {
@@ -127,15 +125,12 @@ export function MenuDetailModal({ item, onClose }: MenuDetailModalProps) {
             {item.category}
           </span>
 
-          <p className="mt-8 text-3xl font-black text-white">
-            {remainingCount} items left
-          </p>
-          <p className="mt-3 max-w-md text-base font-medium leading-8 text-white/65">
+          <p className="mt-8 max-w-md text-base font-medium leading-8 text-white/65">
             Add this dish to your basket for catering orders, event spreads, and
             fresh Abirikky-style service.
           </p>
 
-          <div className="mt-10">
+          <div className="mt-8">
             <BasketQuantityControl
               flySourceRef={imageRef}
               item={item}

@@ -7,7 +7,6 @@ export type BasketItem = {
   name: string;
   category: MenuCardItem["category"];
   image: string;
-  originalItemsLeft: number;
   quantity: number;
 };
 
@@ -25,18 +24,12 @@ function createBasketItem(item: MenuCardItem): BasketItem {
     name: item.name,
     category: item.category,
     image: item.image,
-    originalItemsLeft: item.itemsLeft,
     quantity: 0,
   };
 }
 
 function incrementBasketItem(state: BasketState, item: MenuCardItem) {
   const basketItem = state.items[item.id] ?? createBasketItem(item);
-
-  if (basketItem.quantity >= basketItem.originalItemsLeft) {
-    state.items[item.id] = basketItem;
-    return;
-  }
 
   basketItem.quantity += 1;
   state.items[item.id] = basketItem;

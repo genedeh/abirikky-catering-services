@@ -5,7 +5,6 @@ import { useRef } from "react";
 
 import { BasketQuantityControl } from "@/components/basket/BasketQuantityControl";
 import type { MenuCardItem } from "@/constants/menuData";
-import { useBasket } from "@/hooks/useBasket";
 
 type MenuCardTone = "light" | "muted" | "dark";
 
@@ -20,26 +19,22 @@ const toneStyles: Record<
   {
     image: string;
     title: string;
-    meta: string;
     button: string;
   }
 > = {
   light: {
     image: "h-56 bg-charcoal-100 sm:h-72",
     title: "text-2xl text-charcoal-700 sm:text-3xl",
-    meta: "text-charcoal-500",
     button: "bg-green-500 text-white hover:bg-green-600",
   },
   muted: {
     image: "h-36 bg-white/20 sm:h-56",
     title: "text-base text-white sm:text-2xl",
-    meta: "text-white/80",
     button: "bg-white/20 text-white hover:bg-white/30",
   },
   dark: {
     image: "h-60 bg-white/10 sm:h-64",
     title: "text-2xl text-white",
-    meta: "text-white/70",
     button: "bg-green-500 text-white hover:bg-green-600",
   },
 };
@@ -80,7 +75,6 @@ export function MenuCardContent({
   highlightQuery,
 }: MenuCardContentProps) {
   const styles = toneStyles[tone];
-  const { remainingCount } = useBasket(item);
   const imageRef = useRef<HTMLDivElement | null>(null);
 
   return (
@@ -105,10 +99,7 @@ export function MenuCardContent({
           {renderHighlightedName(item.name, highlightQuery)}
         </h3>
 
-        <div
-          className={`mx-auto mt-4 flex w-full flex-col items-center justify-center gap-3 text-center text-sm font-semibold ${styles.meta}`}
-        >
-          <span>{remainingCount} items left</span>
+        <div className="mx-auto mt-4 flex w-full flex-col items-center justify-center gap-3">
           <BasketQuantityControl
             counterTone={tone === "light" ? "light" : "dark"}
             flySourceRef={imageRef}
