@@ -37,6 +37,10 @@ export function Header() {
       return pathname === "/blog" || pathname.startsWith("/blog/");
     }
 
+    if (href === "/contact") {
+      return pathname === "/contact";
+    }
+
     return false;
   };
 
@@ -136,9 +140,9 @@ export function Header() {
           ))}
 
           <Link
-            href="/#contact"
+            href="/contact"
             onClick={() => setIsDrawerOpen(false)}
-            className="mt-4 rounded-md border-2 border-green-500 px-5 py-3 text-center text-green-500 transition-colors duration-200 hover:border-gold-500 hover:text-gold-500"
+            className="mt-4 min-w-44 rounded-md border-2 border-green-500 px-7 py-3 text-center text-green-500 transition-colors duration-200 hover:border-gold-500 hover:text-gold-500"
           >
             Contact us
           </Link>
@@ -199,8 +203,8 @@ export function Header() {
           ))}
 
           <Link
-            href="/#contact"
-            className="rounded-md border-2 border-green-500 px-5 py-2 text-green-500 transition-colors duration-200 hover:border-gold-500 hover:text-gold-500"
+            href="/contact"
+            className="min-w-36 rounded-md border-2 border-green-500 px-7 py-2 text-center text-green-500 transition-colors duration-200 hover:border-gold-500 hover:text-gold-500"
           >
             Contact us
           </Link>

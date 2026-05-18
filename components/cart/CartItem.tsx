@@ -25,7 +25,7 @@ export function CartItem({ item }: CartItemProps) {
   const { decrement, increment, remove } = useBasket(menuItem);
 
   return (
-    <article className="grid grid-cols-[6.5rem_1fr] gap-4 border-b border-white/10 py-5 sm:grid-cols-[8rem_1fr]">
+    <article className="grid grid-cols-[6.5rem_1fr] gap-8 border-b border-white/10 py-5 sm:grid-cols-[8rem_1fr]">
       <div className="relative h-28 w-full sm:h-32">
         <Image
           src={item.image}

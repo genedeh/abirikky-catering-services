@@ -10,7 +10,7 @@ type CmsSlugItem = {
   updatedAt?: string;
 };
 
-const staticRoutes = ["", "/menu", "/gallery", "/blog"];
+const staticRoutes = ["", "/menu", "/gallery", "/blog", "/contact"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();

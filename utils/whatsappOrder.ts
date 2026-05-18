@@ -18,6 +18,18 @@ type BuildWhatsAppOrderInput = {
   preferredDateTime: string;
 };
 
+export type BuildWhatsAppContactInput = {
+  email: string;
+  eventDate: string;
+  eventType: string;
+  guestCount: string;
+  message: string;
+  name: string;
+  origin: string;
+  phone: string;
+  serviceInterest: string;
+};
+
 export function normalizeWhatsAppPhone(phoneNumber: string) {
   return phoneNumber.replace(/[+\s().-]/g, "");
 }
@@ -100,6 +112,59 @@ Please confirm availability.`;
     preferredDateTime: formattedDateTime,
     whatsappUrl: `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(
       orderMessage,
+    )}`,
+  };
+}
+
+export function buildWhatsAppContactMessage({
+  email,
+  eventDate,
+  eventType,
+  guestCount,
+  message,
+  name,
+  origin,
+  phone,
+  serviceInterest,
+}: BuildWhatsAppContactInput) {
+  const normalizedPhone = normalizeWhatsAppPhone(WHATSAPP_ORDER_PHONE);
+  const contactMessage = `Hello Abirikky, I would like to make an enquiry.
+
+Contact Request:
+
+Name:
+${name}
+
+Phone:
+${phone}
+
+Email:
+${email || "Not provided"}
+
+Service Interest:
+${serviceInterest}
+
+Event Type:
+${eventType || "Not specified"}
+
+Guest Count:
+${guestCount || "Not specified"}
+
+Preferred Date:
+${eventDate || "Not specified"}
+
+Message:
+${message}
+
+Source:
+${origin}/contact
+
+Please get back to me with availability and next steps.`;
+
+  return {
+    message: contactMessage,
+    whatsappUrl: `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(
+      contactMessage,
     )}`,
   };
 }
